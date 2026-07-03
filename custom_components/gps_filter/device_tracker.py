@@ -11,4 +11,4 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up platform."""
-    return
+    async_add_entities([])

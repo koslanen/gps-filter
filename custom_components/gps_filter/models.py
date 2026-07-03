@@ -27,3 +27,12 @@ class FilterResult:
     point: GPSPoint | None
     calculated_speed: float | None = None
     jump_distance: float | None = None
+
+
+@dataclass(slots=True)
+class FilterConfig:
+    """Filter configuration."""
+
+    source_entity: str
+    max_speed: float
+    max_accuracy: float

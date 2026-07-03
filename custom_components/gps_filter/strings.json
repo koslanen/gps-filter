@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "GPS Filter",
+        "description": "Configure the GPS filter.",
+        "data": {
+          "source": "Source tracker",
+          "max_speed": "Maximum speed (km/h)",
+          "max_accuracy": "Maximum GPS accuracy (m)"
+        }
+      }
+    }
+  }
+}
