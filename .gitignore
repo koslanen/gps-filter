@@ -24,3 +24,5 @@ htmlcov/
 
 # Windows
 Thumbs.db
+
+.pytest_cache/
