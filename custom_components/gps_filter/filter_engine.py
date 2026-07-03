@@ -6,7 +6,6 @@ from math import asin, cos, radians, sin, sqrt
 
 from .models import FilterResult, GPSPoint
 
-
 EARTH_RADIUS = 6371000.0
 
 
@@ -24,12 +23,7 @@ def haversine(
     lat1 = radians(lat1)
     lat2 = radians(lat2)
 
-    a = (
-        sin(d_lat / 2) ** 2
-        + cos(lat1)
-        * cos(lat2)
-        * sin(d_lon / 2) ** 2
-    )
+    a = sin(d_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(d_lon / 2) ** 2
 
     c = 2 * asin(sqrt(a))
 
@@ -82,10 +76,7 @@ class GPSFilterEngine:
             point.longitude,
         )
 
-        seconds = (
-            point.timestamp
-            - self._last_point.timestamp
-        ).total_seconds()
+        seconds = (point.timestamp - self._last_point.timestamp).total_seconds()
 
         if seconds <= 0:
             seconds = 1

@@ -23,7 +23,7 @@ class FilterResult:
     """Result of processing a GPS point."""
 
     accepted: bool
-    reason: str |None
+    reason: str | None
     point: GPSPoint | None
     calculated_speed: float | None = None
     jump_distance: float | None = None

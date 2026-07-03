@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from custom_components.gps_filter.engine import GPSFilterEngine
+from custom_components.gps_filter.filter_engine import GPSFilterEngine
 from custom_components.gps_filter.models import GPSPoint
 
 
