@@ -23,6 +23,11 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_last_accuracy",
     "sensor.gps_filter_last_received_timestamp",
     "sensor.gps_filter_last_accepted_timestamp",
+    "sensor.gps_filter_acceptance_rate",
+    "sensor.gps_filter_max_distance",
+    "sensor.gps_filter_max_calculated_speed",
+    "sensor.gps_filter_max_reported_speed",
+    "sensor.gps_filter_max_accuracy",
     "sensor.gps_filter_accepted_count",
     "sensor.gps_filter_duplicate_count",
     "sensor.gps_filter_accuracy_rejections",
@@ -78,6 +83,11 @@ def test_sensor_entities_expose_coordinator_state():
             speed_rejections=4,
         ),
     )
+    coordinator.summary_stats.total_received_count = 4
+    coordinator.summary_stats.max_distance_m = 88.0
+    coordinator.summary_stats.max_calculated_speed_kmh = 40.0
+    coordinator.summary_stats.max_reported_speed_kmh = 36.0
+    coordinator.summary_stats.max_accuracy_m = 25.0
     coordinator.data.last_received_point.timestamp = datetime(
         2024,
         1,
@@ -108,6 +118,11 @@ def test_sensor_entities_expose_coordinator_state():
         1,
         tzinfo=UTC,
     )
+    assert sensors["acceptance_rate"].native_value == 50.0
+    assert sensors["max_distance"].native_value == 88.0
+    assert sensors["max_calculated_speed"].native_value == 40.0
+    assert sensors["max_reported_speed"].native_value == 36.0
+    assert sensors["max_accuracy"].native_value == 25.0
     assert sensors["accepted_count"].native_value == 2
     assert sensors["duplicate_count"].native_value == 1
     assert sensors["accuracy_rejections"].native_value == 3
@@ -128,6 +143,11 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["last_accuracy"].native_value == 0.0
     assert sensors["last_received_timestamp"].native_value is None
     assert sensors["last_accepted_timestamp"].native_value is None
+    assert sensors["acceptance_rate"].native_value == 0.0
+    assert sensors["max_distance"].native_value == 0.0
+    assert sensors["max_calculated_speed"].native_value == 0.0
+    assert sensors["max_reported_speed"].native_value == 0.0
+    assert sensors["max_accuracy"].native_value == 0.0
     assert sensors["accepted_count"].native_value == 0
     assert sensors["duplicate_count"].native_value == 0
     assert sensors["accuracy_rejections"].native_value == 0
@@ -184,6 +204,11 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "last_accuracy": None,
         "last_received_timestamp": None,
         "last_accepted_timestamp": None,
+        "acceptance_rate": None,
+        "max_distance": None,
+        "max_calculated_speed": None,
+        "max_reported_speed": None,
+        "max_accuracy": None,
         "accepted_count": SensorStateClass.TOTAL_INCREASING,
         "duplicate_count": SensorStateClass.TOTAL_INCREASING,
         "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,

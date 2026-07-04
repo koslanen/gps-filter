@@ -51,6 +51,21 @@
       "last_accepted_timestamp": {
         "name": "Last Accepted Timestamp"
       },
+      "acceptance_rate": {
+        "name": "Acceptance Rate"
+      },
+      "max_distance": {
+        "name": "Max Distance"
+      },
+      "max_calculated_speed": {
+        "name": "Max Calculated Speed"
+      },
+      "max_reported_speed": {
+        "name": "Max Reported Speed"
+      },
+      "max_accuracy": {
+        "name": "Max Accuracy"
+      },
       "accepted_count": {
         "name": "Accepted Count"
       },

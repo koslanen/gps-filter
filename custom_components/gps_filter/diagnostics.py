@@ -64,6 +64,35 @@ def _serialize_timeline_entry(entry: FilterTimelineEntry) -> dict[str, Any]:
     }
 
 
+def _serialize_summary(coordinator: Any, stats: Any) -> dict[str, Any]:
+    """Serialize runtime summary statistics for diagnostics output."""
+    summary_stats = getattr(coordinator, "summary_stats", None)
+    return {
+        "total_received_count": getattr(summary_stats, "total_received_count", 0),
+        "accepted_count": getattr(stats, "accepted", 0),
+        "duplicate_count": getattr(stats, "duplicate", 0),
+        "accuracy_rejections": getattr(stats, "accuracy_rejections", 0),
+        "speed_rejections": getattr(stats, "speed_rejections", 0),
+        "acceptance_rate_percent": getattr(
+            coordinator,
+            "acceptance_rate_percent",
+            0.0,
+        ),
+        "max_distance_m": getattr(summary_stats, "max_distance_m", 0.0),
+        "max_calculated_speed_kmh": getattr(
+            summary_stats,
+            "max_calculated_speed_kmh",
+            0.0,
+        ),
+        "max_reported_speed_kmh": getattr(
+            summary_stats,
+            "max_reported_speed_kmh",
+            0.0,
+        ),
+        "max_accuracy_m": getattr(summary_stats, "max_accuracy_m", 0.0),
+    }
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -92,6 +121,7 @@ async def async_get_config_entry_diagnostics(
             "duplicate_count": 0,
             "accuracy_rejections": 0,
             "speed_rejections": 0,
+            "summary": _serialize_summary(coordinator, None),
             "last_received_point": None,
             "last_accepted_point": None,
             "last_filter_result": None,
@@ -108,6 +138,7 @@ async def async_get_config_entry_diagnostics(
         "duplicate_count": getattr(stats, "duplicate", 0),
         "accuracy_rejections": getattr(stats, "accuracy_rejections", 0),
         "speed_rejections": getattr(stats, "speed_rejections", 0),
+        "summary": _serialize_summary(coordinator, stats),
         "last_received_point": _serialize_gps_point(data.last_received_point),
         "last_accepted_point": _serialize_gps_point(data.last_accepted_point),
         "last_filter_result": _serialize_filter_result(data.last_result),

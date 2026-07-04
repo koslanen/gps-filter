@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfLength, UnitOfSpeed
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -141,6 +141,47 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         translation_key="last_accepted_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_last_accepted_timestamp,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="acceptance_rate",
+        translation_key="acceptance_rate",
+        icon="mdi:percent-outline",
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda coordinator: coordinator.acceptance_rate_percent,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="max_distance",
+        translation_key="max_distance",
+        icon="mdi:map-marker-distance",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        value_fn=lambda coordinator: coordinator.summary_stats.max_distance_m,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="max_calculated_speed",
+        translation_key="max_calculated_speed",
+        icon="mdi:speedometer",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
+        value_fn=lambda coordinator: (
+            coordinator.summary_stats.max_calculated_speed_kmh
+        ),
+    ),
+    GPSFilterSensorEntityDescription(
+        key="max_reported_speed",
+        translation_key="max_reported_speed",
+        icon="mdi:speedometer",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
+        value_fn=lambda coordinator: coordinator.summary_stats.max_reported_speed_kmh,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="max_accuracy",
+        translation_key="max_accuracy",
+        icon="mdi:crosshairs-gps",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        value_fn=lambda coordinator: coordinator.summary_stats.max_accuracy_m,
     ),
     GPSFilterSensorEntityDescription(
         key="accepted_count",

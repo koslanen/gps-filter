@@ -60,6 +60,11 @@ def test_diagnostics_report_contains_expected_fields():
             speed_rejections=4,
         ),
     )
+    coordinator.summary_stats.total_received_count = 10
+    coordinator.summary_stats.max_distance_m = 88.0
+    coordinator.summary_stats.max_calculated_speed_kmh = 40.0
+    coordinator.summary_stats.max_reported_speed_kmh = 36.0
+    coordinator.summary_stats.max_accuracy_m = 25.0
 
     hass = SimpleNamespace(data={"gps_filter": {"entry-1": coordinator}})
     entry = DummyEntry()
@@ -76,6 +81,18 @@ def test_diagnostics_report_contains_expected_fields():
     assert result["duplicate_count"] == 1
     assert result["accuracy_rejections"] == 3
     assert result["speed_rejections"] == 4
+    assert result["summary"] == {
+        "total_received_count": 10,
+        "accepted_count": 2,
+        "duplicate_count": 1,
+        "accuracy_rejections": 3,
+        "speed_rejections": 4,
+        "acceptance_rate_percent": 20.0,
+        "max_distance_m": 88.0,
+        "max_calculated_speed_kmh": 40.0,
+        "max_reported_speed_kmh": 36.0,
+        "max_accuracy_m": 25.0,
+    }
     assert result["last_received_point"]["latitude"] == 60.0
     assert result["last_accepted_point"]["latitude"] == 60.0
     assert result["last_filter_result"]["reason"] == "accepted"
@@ -161,6 +178,11 @@ def test_diagnostics_report_contains_filter_timeline():
             "reported_speed_kmh": 0.0,
         },
     ]
+    assert result["summary"]["total_received_count"] == 2
+    assert result["summary"]["accepted_count"] == 1
+    assert result["summary"]["duplicate_count"] == 1
+    assert result["summary"]["acceptance_rate_percent"] == 50.0
+    assert result["summary"]["max_accuracy_m"] == 5.0
 
 
 def test_manifest_version_matches_const_version():

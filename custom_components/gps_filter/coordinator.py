@@ -14,7 +14,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED
 from .filter_engine import GPSFilterEngine
 from .helpers import get_config_value
-from .models import CoordinatorData, FilterResult, FilterTimelineEntry, GPSPoint
+from .models import (
+    CoordinatorData,
+    FilterResult,
+    FilterTimelineEntry,
+    GPSPoint,
+    SummaryStats,
+)
 
 _LOGGER = logging.getLogger(__name__)
 FILTER_TIMELINE_MAXLEN = 50
@@ -59,6 +65,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.filter_timeline: deque[FilterTimelineEntry] = deque(
             maxlen=FILTER_TIMELINE_MAXLEN
         )
+        self.summary_stats = SummaryStats()
         self.data = CoordinatorData(engine_stats=self.engine.stats)
 
     @property
@@ -84,6 +91,17 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         """Return the most recent filter result."""
 
         return self.data.last_result
+
+    @property
+    def acceptance_rate_percent(self) -> float:
+        """Return the percentage of received points accepted by the filter."""
+        if self.summary_stats.total_received_count == 0:
+            return 0.0
+        return (
+            self.data.engine_stats.accepted
+            / self.summary_stats.total_received_count
+            * 100
+        )
 
     async def async_start(self) -> None:
         """Start listening for GPS updates."""
@@ -134,6 +152,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
 
         result = self.engine.process(point)
+        self._update_summary_stats(point, result)
         self.filter_timeline.append(
             FilterTimelineEntry(
                 timestamp=point.timestamp,
@@ -193,6 +212,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.source_entity,
         )
         self.engine.stats = type(self.engine.stats)()
+        self.summary_stats = SummaryStats()
         self.async_set_updated_data(
             CoordinatorData(
                 last_received_point=self.last_received_point,
@@ -212,8 +232,39 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             max_speed=get_config_value(self.entry, CONF_MAX_SPEED),
             max_accuracy=get_config_value(self.entry, CONF_MAX_ACCURACY),
         )
+        self.summary_stats = SummaryStats()
         self.filter_timeline.clear()
         self.async_set_updated_data(CoordinatorData(engine_stats=self.engine.stats))
+
+    def _update_summary_stats(self, point: GPSPoint, result: FilterResult) -> None:
+        """Update post-drive summary statistics from a filter decision."""
+        self.summary_stats.total_received_count += 1
+        self.summary_stats.max_accuracy_m = max(
+            self.summary_stats.max_accuracy_m,
+            point.accuracy,
+        )
+
+        if result.distance_m is not None:
+            self.summary_stats.max_distance_m = max(
+                self.summary_stats.max_distance_m,
+                result.distance_m,
+            )
+
+        if result.calculated_speed_kmh is not None:
+            self.summary_stats.max_calculated_speed_kmh = max(
+                self.summary_stats.max_calculated_speed_kmh,
+                result.calculated_speed_kmh,
+            )
+
+        reported_speed_kmh = result.reported_speed_kmh
+        if reported_speed_kmh is None and point.speed is not None:
+            reported_speed_kmh = point.speed * 3.6
+
+        if reported_speed_kmh is not None:
+            self.summary_stats.max_reported_speed_kmh = max(
+                self.summary_stats.max_reported_speed_kmh,
+                reported_speed_kmh,
+            )
 
     async def async_stop(self) -> None:
         """Stop listening."""

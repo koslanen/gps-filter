@@ -220,6 +220,63 @@ def test_coordinator_filter_timeline_entry_contains_filter_decision_fields():
     assert entry.reported_speed_kmh is None
 
 
+def test_coordinator_tracks_post_drive_summary_statistics():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+
+    states = [
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.0,
+                "gps_accuracy": 5.0,
+                "speed": 0.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.01,
+                "gps_accuracy": 8.0,
+                "speed": 10.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 1, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.01,
+                "gps_accuracy": 6.0,
+                "speed": 3.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 1, 1, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.02,
+                "gps_accuracy": 100.0,
+                "speed": 0.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 2, 0, tzinfo=UTC),
+        ),
+    ]
+
+    for state in states:
+        coordinator._state_changed(SimpleNamespace(data={"new_state": state}))
+
+    assert coordinator.summary_stats.total_received_count == 4
+    assert coordinator.data.engine_stats.accepted == 2
+    assert coordinator.data.engine_stats.duplicate == 1
+    assert coordinator.data.engine_stats.accuracy_rejections == 1
+    assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.acceptance_rate_percent == 50.0
+    assert coordinator.summary_stats.max_distance_m > 0
+    assert coordinator.summary_stats.max_calculated_speed_kmh > 0
+    assert coordinator.summary_stats.max_reported_speed_kmh == 36.0
+    assert coordinator.summary_stats.max_accuracy_m == 100.0
+
+
 def test_reset_filter_clears_filter_timeline():
     coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
     state = SimpleNamespace(
@@ -295,6 +352,11 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.data.engine_stats.duplicate = 1
     coordinator.data.engine_stats.accuracy_rejections = 1
     coordinator.data.engine_stats.speed_rejections = 1
+    coordinator.summary_stats.total_received_count = 4
+    coordinator.summary_stats.max_distance_m = 42.0
+    coordinator.summary_stats.max_calculated_speed_kmh = 12.5
+    coordinator.summary_stats.max_reported_speed_kmh = 10.0
+    coordinator.summary_stats.max_accuracy_m = 30.0
 
     coordinator.reset_statistics()
 
@@ -302,6 +364,18 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.summary_stats.total_received_count == 0
+    assert coordinator.acceptance_rate_percent == 0.0
+    assert coordinator.summary_stats.max_distance_m == 0.0
+    assert coordinator.summary_stats.max_calculated_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_reported_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_accuracy_m == 0.0
+
+    coordinator.summary_stats.total_received_count = 2
+    coordinator.summary_stats.max_distance_m = 24.0
+    coordinator.summary_stats.max_calculated_speed_kmh = 20.0
+    coordinator.summary_stats.max_reported_speed_kmh = 9.0
+    coordinator.summary_stats.max_accuracy_m = 15.0
 
     coordinator.reset_filter()
 
@@ -312,3 +386,9 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.summary_stats.total_received_count == 0
+    assert coordinator.acceptance_rate_percent == 0.0
+    assert coordinator.summary_stats.max_distance_m == 0.0
+    assert coordinator.summary_stats.max_calculated_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_reported_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_accuracy_m == 0.0

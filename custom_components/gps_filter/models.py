@@ -56,6 +56,17 @@ class EngineStats:
 
 
 @dataclass(slots=True)
+class SummaryStats:
+    """Runtime summary statistics for post-drive diagnostics."""
+
+    total_received_count: int = 0
+    max_distance_m: float = 0.0
+    max_calculated_speed_kmh: float = 0.0
+    max_reported_speed_kmh: float = 0.0
+    max_accuracy_m: float = 0.0
+
+
+@dataclass(slots=True)
 class CoordinatorData:
     """Structured snapshot of coordinator state."""
 

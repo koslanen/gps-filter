@@ -50,6 +50,11 @@ The filtered tracker exposes the most recent accepted GPS position.
 - `sensor.gps_filter_last_accuracy`
 - `sensor.gps_filter_last_received_timestamp`
 - `sensor.gps_filter_last_accepted_timestamp`
+- `sensor.gps_filter_acceptance_rate`
+- `sensor.gps_filter_max_distance`
+- `sensor.gps_filter_max_calculated_speed`
+- `sensor.gps_filter_max_reported_speed`
+- `sensor.gps_filter_max_accuracy`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -71,6 +76,11 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_last_accuracy`
 - `sensor.gps_filter_last_received_timestamp`
 - `sensor.gps_filter_last_accepted_timestamp`
+- `sensor.gps_filter_acceptance_rate`
+- `sensor.gps_filter_max_distance`
+- `sensor.gps_filter_max_calculated_speed`
+- `sensor.gps_filter_max_reported_speed`
+- `sensor.gps_filter_max_accuracy`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -81,9 +91,9 @@ entry title as the Home Assistant device name, for example
 `GPS Filter - Pixel 8` or `GPS Filter - Car Tracker`. This keeps generated
 entity IDs readable and avoids relying on `_2` suffixes.
 
-The live diagnostic sensors for speed, distance, accuracy, status, and reason
-do not compile long-term statistics. The counter sensors use
-`TOTAL_INCREASING`.
+The live diagnostic sensors for speed, distance, accuracy, status, reason, and
+post-drive maximums do not compile long-term statistics. The counter sensors
+use `TOTAL_INCREASING`.
 
 ## Configuration
 
@@ -129,6 +139,7 @@ Config entry diagnostics include:
 - Integration version
 - Redacted configuration
 - Filter statistics
+- Post-drive summary statistics
 - Effective filter thresholds
 - Last received point
 - Last accepted point
@@ -150,6 +161,22 @@ decisions. Each timeline entry contains:
 
 The timeline is not persisted and is reset when Home Assistant restarts or when
 `gps_filter.reset_filter` is called.
+
+The diagnostics summary includes:
+
+- total_received_count
+- accepted_count
+- duplicate_count
+- accuracy_rejections
+- speed_rejections
+- acceptance_rate_percent
+- max_distance_m
+- max_calculated_speed_kmh
+- max_reported_speed_kmh
+- max_accuracy_m
+
+Summary statistics are in-memory only. They reset when
+`gps_filter.reset_statistics` or `gps_filter.reset_filter` is called.
 
 ## Logging
 
@@ -179,6 +206,7 @@ logger:
    - Current filtered tracker position
    - Status and last reason sensors
    - Accuracy, distance, calculated speed, and reported speed
+   - Acceptance rate and maximum observed distance, speed, and accuracy
    - Accepted and rejected counters
    - Config entry diagnostics and filter timeline
 
