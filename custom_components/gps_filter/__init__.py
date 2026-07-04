@@ -1,10 +1,40 @@
 """GPS Filter."""
 
+from __future__ import annotations
+
+import logging
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import GPSFilterCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def _async_handle_reset_statistics(call: ServiceCall) -> None:
+    """Reset filter statistics for all entries."""
+    for coordinator in _iter_coordinators(call.hass):
+        coordinator.reset_statistics()
+
+
+@callback
+def _async_handle_reset_filter(call: ServiceCall) -> None:
+    """Reset filter state and statistics for all entries."""
+    for coordinator in _iter_coordinators(call.hass):
+        coordinator.reset_filter()
+
+
+@callback
+def _iter_coordinators(hass: HomeAssistant) -> list[GPSFilterCoordinator]:
+    """Return all loaded GPS Filter coordinators."""
+    return [
+        coordinator
+        for coordinator in hass.data.get(DOMAIN, {}).values()
+        if isinstance(coordinator, GPSFilterCoordinator)
+    ]
 
 
 async def async_setup(
@@ -13,6 +43,18 @@ async def async_setup(
 ) -> bool:
     """Set up GPS Filter."""
     hass.data.setdefault(DOMAIN, {})
+
+    hass.services.async_register(
+        DOMAIN,
+        "reset_statistics",
+        _async_handle_reset_statistics,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "reset_filter",
+        _async_handle_reset_filter,
+    )
+
     return True
 
 
@@ -53,5 +95,9 @@ async def async_unload_entry(
     if unload_ok:
         coordinator: GPSFilterCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.async_stop()
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.services.async_remove(DOMAIN, "reset_statistics")
+        hass.services.async_remove(DOMAIN, "reset_filter")
 
     return unload_ok

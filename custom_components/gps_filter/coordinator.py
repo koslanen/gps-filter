@@ -156,6 +156,23 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 accuracy,
             )
 
+    def reset_statistics(self) -> None:
+        """Reset filter statistics."""
+        self.data.engine_stats = self.engine.stats = type(self.engine.stats)()
+        self.async_set_updated_data(self.data)
+
+    def reset_filter(self) -> None:
+        """Reset the filter engine state and statistics."""
+        self.engine = GPSFilterEngine(
+            max_speed=self.entry.data["max_speed"],
+            max_accuracy=self.entry.data["max_accuracy"],
+        )
+        self.data.engine_stats = self.engine.stats
+        self.data.last_result = None
+        self.data.last_received_point = None
+        self.data.last_accepted_point = None
+        self.async_set_updated_data(self.data)
+
     async def async_stop(self) -> None:
         """Stop listening."""
 

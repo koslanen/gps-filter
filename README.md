@@ -12,6 +12,7 @@ A Home Assistant custom integration that filters noisy GPS updates from a source
   - moving too fast based on calculated speed
 - Exposes the last received point, last accepted point, last filter result, and engine statistics through the coordinator state
 - Logs accepted and rejected updates with distance, speed, and accuracy details
+- Provides diagnostics for the config entry with version, configuration values, filter statistics, and recent GPS state
 
 ## How it works
 
@@ -37,6 +38,13 @@ The engine currently accepts the first point, then rejects updates when:
 - the incoming point is an exact duplicate of the previous point
 - the calculated movement speed exceeds the configured maximum
 
+## Services
+
+The integration exposes two services:
+
+- `gps_filter.reset_statistics` — clears the accumulated filter statistics
+- `gps_filter.reset_filter` — clears statistics and resets the filter engine so the next accepted point becomes a new first point
+
 ## Development
 
-The project includes unit tests for the filter engine and coordinator flow.
+The project includes unit tests for the filter engine, coordinator flow, diagnostics, and service behavior.

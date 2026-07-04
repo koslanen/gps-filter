@@ -1,7 +1,6 @@
 """GPS Filter device tracker."""
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,6 +46,12 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
     def extra_state_attributes(self):
         attributes = {}
 
+        stats = self.coordinator.data.engine_stats
+        attributes["accepted_count"] = stats.accepted
+        attributes["duplicate_count"] = stats.duplicate
+        attributes["accuracy_rejections"] = stats.accuracy_rejections
+        attributes["speed_rejections"] = stats.speed_rejections
+
         if self.coordinator.last_received_point is not None:
             attributes["last_received_accuracy"] = (
                 self.coordinator.last_received_point.accuracy
@@ -62,6 +67,13 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
 
         if self.coordinator.last_result is not None:
             attributes["last_result_reason"] = self.coordinator.last_result.reason
+            attributes["last_calculated_speed_kmh"] = (
+                self.coordinator.last_result.calculated_speed_kmh
+            )
+            attributes["last_reported_speed_kmh"] = (
+                self.coordinator.last_result.reported_speed_kmh
+            )
+            attributes["last_distance_m"] = self.coordinator.last_result.distance_m
 
         return attributes
 

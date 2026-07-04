@@ -6,6 +6,7 @@ import homeassistant.helpers.frame as frame
 import pytest
 
 from custom_components.gps_filter.coordinator import GPSFilterCoordinator
+from custom_components.gps_filter.device_tracker import FilteredTracker
 
 
 class DummyEntry:
@@ -66,3 +67,63 @@ def test_coordinator_updates_last_received_and_preserves_last_accepted_on_reject
     assert coordinator.last_result.reason == "accuracy"
     assert coordinator.data.engine_stats.accepted == 1
     assert coordinator.data.engine_stats.accuracy_rejections == 1
+
+
+def test_filtered_tracker_exposes_filter_metrics_as_attributes():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    tracker = FilteredTracker(coordinator)
+
+    coordinator.data.engine_stats.accepted = 2
+    coordinator.data.engine_stats.duplicate = 1
+    coordinator.data.engine_stats.accuracy_rejections = 3
+    coordinator.data.engine_stats.speed_rejections = 4
+
+    coordinator.data.last_result = type(
+        "Result",
+        (),
+        {
+            "reason": "accepted",
+            "calculated_speed_kmh": 12.5,
+            "reported_speed_kmh": 10.0,
+            "distance_m": 42.0,
+        },
+    )()
+
+    attributes = tracker.extra_state_attributes
+
+    assert attributes["accepted_count"] == 2
+    assert attributes["duplicate_count"] == 1
+    assert attributes["accuracy_rejections"] == 3
+    assert attributes["speed_rejections"] == 4
+    assert attributes["last_result_reason"] == "accepted"
+    assert attributes["last_calculated_speed_kmh"] == 12.5
+    assert attributes["last_reported_speed_kmh"] == 10.0
+    assert attributes["last_distance_m"] == 42.0
+
+
+def test_coordinator_reset_statistics_and_filter_state():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    coordinator.data.last_received_point = Mock()
+    coordinator.data.last_accepted_point = Mock()
+    coordinator.data.last_result = Mock()
+    coordinator.data.engine_stats.accepted = 1
+    coordinator.data.engine_stats.duplicate = 1
+    coordinator.data.engine_stats.accuracy_rejections = 1
+    coordinator.data.engine_stats.speed_rejections = 1
+
+    coordinator.reset_statistics()
+
+    assert coordinator.data.engine_stats.accepted == 0
+    assert coordinator.data.engine_stats.duplicate == 0
+    assert coordinator.data.engine_stats.accuracy_rejections == 0
+    assert coordinator.data.engine_stats.speed_rejections == 0
+
+    coordinator.reset_filter()
+
+    assert coordinator.data.last_received_point is None
+    assert coordinator.data.last_accepted_point is None
+    assert coordinator.data.last_result is None
+    assert coordinator.data.engine_stats.accepted == 0
+    assert coordinator.data.engine_stats.duplicate == 0
+    assert coordinator.data.engine_stats.accuracy_rejections == 0
+    assert coordinator.data.engine_stats.speed_rejections == 0
