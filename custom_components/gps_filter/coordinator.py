@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED
 from .filter_engine import GPSFilterEngine
+from .helpers import get_config_value
 from .models import CoordinatorData, FilterResult, FilterTimelineEntry, GPSPoint
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +29,6 @@ def _coerce_float(value: Any, default: float | None = None) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return default
-
-
-def _get_config_value(entry: ConfigEntry, key: str) -> Any:
-    """Return an option value, falling back to config entry data."""
-    return getattr(entry, "options", {}).get(key, entry.data[key])
 
 
 class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -55,8 +51,8 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.source_entity = entry.data["source"]
 
         self.engine = GPSFilterEngine(
-            max_speed=_get_config_value(entry, CONF_MAX_SPEED),
-            max_accuracy=_get_config_value(entry, CONF_MAX_ACCURACY),
+            max_speed=get_config_value(entry, CONF_MAX_SPEED),
+            max_accuracy=get_config_value(entry, CONF_MAX_ACCURACY),
         )
 
         self._remove_listener = None
@@ -213,8 +209,8 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.source_entity,
         )
         self.engine = GPSFilterEngine(
-            max_speed=_get_config_value(self.entry, CONF_MAX_SPEED),
-            max_accuracy=_get_config_value(self.entry, CONF_MAX_ACCURACY),
+            max_speed=get_config_value(self.entry, CONF_MAX_SPEED),
+            max_accuracy=get_config_value(self.entry, CONF_MAX_ACCURACY),
         )
         self.filter_timeline.clear()
         self.async_set_updated_data(CoordinatorData(engine_stats=self.engine.stats))

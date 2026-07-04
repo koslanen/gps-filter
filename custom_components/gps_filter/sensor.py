@@ -48,6 +48,20 @@ def _status_value(coordinator: GPSFilterCoordinator) -> str:
     return result.reason
 
 
+def _last_received_timestamp(coordinator: GPSFilterCoordinator):
+    """Return the last received point timestamp."""
+    if coordinator.last_received_point is None:
+        return None
+    return coordinator.last_received_point.timestamp
+
+
+def _last_accepted_timestamp(coordinator: GPSFilterCoordinator):
+    """Return the last accepted point timestamp."""
+    if coordinator.last_accepted_point is None:
+        return None
+    return coordinator.last_accepted_point.timestamp
+
+
 SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
     GPSFilterSensorEntityDescription(
         key="status",
@@ -115,6 +129,18 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
             if coordinator.last_received_point is None
             else coordinator.last_received_point.accuracy
         ),
+    ),
+    GPSFilterSensorEntityDescription(
+        key="last_received_timestamp",
+        translation_key="last_received_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_last_received_timestamp,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="last_accepted_timestamp",
+        translation_key="last_accepted_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_last_accepted_timestamp,
     ),
     GPSFilterSensorEntityDescription(
         key="accepted_count",

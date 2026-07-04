@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, VERSION
+from .helpers import get_effective_filter_config
 from .models import FilterResult, FilterTimelineEntry, GPSPoint
 
 
@@ -78,21 +77,17 @@ async def async_get_config_entry_diagnostics(
         for timeline_entry in getattr(coordinator, "filter_timeline", ())
     ]
 
-    manifest_path = Path(__file__).with_name("manifest.json")
-    version = None
-    if manifest_path.exists():
-        with manifest_path.open(encoding="utf-8") as manifest_file:
-            version = json.load(manifest_file).get("version")
-
     configuration = {
         key: _redact_config_value(key, value)
         for key, value in entry.data.items()
     }
+    effective_filter_config = get_effective_filter_config(entry)
 
     if data is None:
         return {
-            "version": version,
+            "version": VERSION,
             "configuration": configuration,
+            "effective_filter_config": effective_filter_config,
             "accepted_count": 0,
             "duplicate_count": 0,
             "accuracy_rejections": 0,
@@ -106,8 +101,9 @@ async def async_get_config_entry_diagnostics(
     stats = getattr(data, "engine_stats", None)
 
     return {
-        "version": version,
+        "version": VERSION,
         "configuration": configuration,
+        "effective_filter_config": effective_filter_config,
         "accepted_count": getattr(stats, "accepted", 0),
         "duplicate_count": getattr(stats, "duplicate", 0),
         "accuracy_rejections": getattr(stats, "accuracy_rejections", 0),

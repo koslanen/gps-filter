@@ -45,6 +45,12 @@
       "last_accuracy": {
         "name": "Last Accuracy"
       },
+      "last_received_timestamp": {
+        "name": "Last Received Timestamp"
+      },
+      "last_accepted_timestamp": {
+        "name": "Last Accepted Timestamp"
+      },
       "accepted_count": {
         "name": "Accepted Count"
       },

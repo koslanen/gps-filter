@@ -1,11 +1,14 @@
 import asyncio
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import homeassistant.helpers.frame as frame
 import pytest
 
+from custom_components.gps_filter.const import VERSION
 from custom_components.gps_filter.coordinator import GPSFilterCoordinator
 from custom_components.gps_filter.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -24,13 +27,14 @@ def _disable_frame_reporting(monkeypatch):
 
 
 class DummyEntry:
-    def __init__(self) -> None:
+    def __init__(self, options=None) -> None:
         self.entry_id = "entry-1"
         self.data = {
             "source": "device_tracker.test",
             "max_speed": 220.0,
             "max_accuracy": 30.0,
         }
+        self.options = options or {}
 
 
 def test_diagnostics_report_contains_expected_fields():
@@ -64,6 +68,10 @@ def test_diagnostics_report_contains_expected_fields():
 
     assert result["version"] == "0.0.1"
     assert result["configuration"]["source"] == "<redacted>"
+    assert result["effective_filter_config"] == {
+        "max_speed": 220.0,
+        "max_accuracy": 30.0,
+    }
     assert result["accepted_count"] == 2
     assert result["duplicate_count"] == 1
     assert result["accuracy_rejections"] == 3
@@ -72,6 +80,33 @@ def test_diagnostics_report_contains_expected_fields():
     assert result["last_accepted_point"]["latitude"] == 60.0
     assert result["last_filter_result"]["reason"] == "accepted"
     assert result["filter_timeline"] == []
+
+
+def test_diagnostics_report_uses_effective_options():
+    coordinator = GPSFilterCoordinator(
+        hass=Mock(),
+        entry=DummyEntry(
+            options={
+                "max_speed": 120.0,
+                "max_accuracy": 15.0,
+            }
+        ),
+    )
+
+    hass = SimpleNamespace(data={"gps_filter": {"entry-1": coordinator}})
+    entry = DummyEntry(
+        options={
+            "max_speed": 120.0,
+            "max_accuracy": 15.0,
+        }
+    )
+
+    result = asyncio.run(async_get_config_entry_diagnostics(hass, entry))
+
+    assert result["effective_filter_config"] == {
+        "max_speed": 120.0,
+        "max_accuracy": 15.0,
+    }
 
 
 def test_diagnostics_report_contains_filter_timeline():
@@ -126,3 +161,14 @@ def test_diagnostics_report_contains_filter_timeline():
             "reported_speed_kmh": 0.0,
         },
     ]
+
+
+def test_manifest_version_matches_const_version():
+    manifest_path = (
+        Path(__file__).resolve().parents[1]
+        / "custom_components"
+        / "gps_filter"
+        / "manifest.json"
+    )
+
+    assert json.loads(manifest_path.read_text(encoding="utf-8"))["version"] == VERSION

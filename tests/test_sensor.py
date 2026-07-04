@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 import homeassistant.helpers.frame as frame
@@ -9,6 +10,7 @@ from custom_components.gps_filter.models import (
     CoordinatorData,
     EngineStats,
     FilterResult,
+    GPSPoint,
 )
 from custom_components.gps_filter.sensor import SENSOR_DESCRIPTIONS, GPSFilterSensor
 
@@ -19,6 +21,8 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_reported_speed",
     "sensor.gps_filter_last_reason",
     "sensor.gps_filter_last_accuracy",
+    "sensor.gps_filter_last_received_timestamp",
+    "sensor.gps_filter_last_accepted_timestamp",
     "sensor.gps_filter_accepted_count",
     "sensor.gps_filter_duplicate_count",
     "sensor.gps_filter_accuracy_rejections",
@@ -54,6 +58,12 @@ def test_sensor_entities_expose_coordinator_state():
     coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
     coordinator.data = CoordinatorData(
         last_received_point=Mock(accuracy=5.0),
+        last_accepted_point=GPSPoint(
+            latitude=60.0,
+            longitude=25.0,
+            accuracy=4.0,
+            timestamp=datetime(2024, 1, 1, 0, 0, 1, tzinfo=UTC),
+        ),
         last_result=FilterResult(
             accepted=True,
             reason="accepted",
@@ -68,6 +78,12 @@ def test_sensor_entities_expose_coordinator_state():
             speed_rejections=4,
         ),
     )
+    coordinator.data.last_received_point.timestamp = datetime(
+        2024,
+        1,
+        1,
+        tzinfo=UTC,
+    )
 
     sensors = _make_sensors(coordinator)
 
@@ -77,6 +93,21 @@ def test_sensor_entities_expose_coordinator_state():
     assert sensors["reported_speed"].native_value == 10.0
     assert sensors["last_reason"].native_value == "accepted"
     assert sensors["last_accuracy"].native_value == 5.0
+    assert sensors["last_received_timestamp"].native_value == datetime(
+        2024,
+        1,
+        1,
+        tzinfo=UTC,
+    )
+    assert sensors["last_accepted_timestamp"].native_value == datetime(
+        2024,
+        1,
+        1,
+        0,
+        0,
+        1,
+        tzinfo=UTC,
+    )
     assert sensors["accepted_count"].native_value == 2
     assert sensors["duplicate_count"].native_value == 1
     assert sensors["accuracy_rejections"].native_value == 3
@@ -95,6 +126,8 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["reported_speed"].native_value == 0.0
     assert sensors["last_reason"].native_value == "unknown"
     assert sensors["last_accuracy"].native_value == 0.0
+    assert sensors["last_received_timestamp"].native_value is None
+    assert sensors["last_accepted_timestamp"].native_value is None
     assert sensors["accepted_count"].native_value == 0
     assert sensors["duplicate_count"].native_value == 0
     assert sensors["accuracy_rejections"].native_value == 0
@@ -149,6 +182,8 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "reported_speed": None,
         "last_reason": None,
         "last_accuracy": None,
+        "last_received_timestamp": None,
+        "last_accepted_timestamp": None,
         "accepted_count": SensorStateClass.TOTAL_INCREASING,
         "duplicate_count": SensorStateClass.TOTAL_INCREASING,
         "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,

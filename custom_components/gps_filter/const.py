@@ -3,6 +3,7 @@
 from typing import Final
 
 DOMAIN: Final = "gps_filter"
+VERSION: Final = "0.0.1"
 
 CONF_SOURCE: Final = "source"
 CONF_MAX_SPEED: Final = "max_speed"

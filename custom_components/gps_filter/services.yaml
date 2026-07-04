@@ -1,9 +1,21 @@
 reset_filter:
   name: Reset filter
   description: Reset the GPS filter state and statistics.
-  fields: {}
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Optional GPS Filter config entry ID to reset. Omit to reset all entries.
+      example: "01J00000000000000000000000"
+      selector:
+        text:
 
 reset_statistics:
   name: Reset statistics
   description: Reset the diagnostic counters for the GPS filter.
-  fields: {}
+  fields:
+    entry_id:
+      name: Entry ID
+      description: Optional GPS Filter config entry ID to reset. Omit to reset all entries.
+      example: "01J00000000000000000000000"
+      selector:
+        text:

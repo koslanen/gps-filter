@@ -48,6 +48,8 @@ The filtered tracker exposes the most recent accepted GPS position.
 - `sensor.gps_filter_reported_speed`
 - `sensor.gps_filter_last_reason`
 - `sensor.gps_filter_last_accuracy`
+- `sensor.gps_filter_last_received_timestamp`
+- `sensor.gps_filter_last_accepted_timestamp`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -67,6 +69,8 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_reported_speed`
 - `sensor.gps_filter_distance`
 - `sensor.gps_filter_last_accuracy`
+- `sensor.gps_filter_last_received_timestamp`
+- `sensor.gps_filter_last_accepted_timestamp`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -115,6 +119,9 @@ The integration exposes two services:
   - Clears statistics, resets filter state, clears the in-memory timeline, and
     makes the next accepted point a new first point.
 
+Both services accept an optional `entry_id` field. If omitted, all loaded GPS
+Filter entries are reset. If provided, only that config entry is reset.
+
 ## Diagnostics
 
 Config entry diagnostics include:
@@ -122,6 +129,7 @@ Config entry diagnostics include:
 - Integration version
 - Redacted configuration
 - Filter statistics
+- Effective filter thresholds
 - Last received point
 - Last accepted point
 - Last filter result

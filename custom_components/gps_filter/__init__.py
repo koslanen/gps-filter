@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 
@@ -11,13 +12,18 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import GPSFilterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+SERVICE_FIELD_ENTRY_ID = "entry_id"
+RESET_SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_FIELD_ENTRY_ID): str})
 
 
 @callback
 def _async_handle_reset_statistics(call: ServiceCall) -> None:
     """Reset filter statistics for all entries."""
     _LOGGER.info("Resetting GPS Filter statistics")
-    for coordinator in _iter_coordinators(call.hass):
+    for coordinator in _iter_coordinators(
+        call.hass,
+        call.data.get(SERVICE_FIELD_ENTRY_ID),
+    ):
         coordinator.reset_statistics()
 
 
@@ -25,17 +31,24 @@ def _async_handle_reset_statistics(call: ServiceCall) -> None:
 def _async_handle_reset_filter(call: ServiceCall) -> None:
     """Reset filter state and statistics for all entries."""
     _LOGGER.info("Resetting GPS Filter state")
-    for coordinator in _iter_coordinators(call.hass):
+    for coordinator in _iter_coordinators(
+        call.hass,
+        call.data.get(SERVICE_FIELD_ENTRY_ID),
+    ):
         coordinator.reset_filter()
 
 
 @callback
-def _iter_coordinators(hass: HomeAssistant) -> list[GPSFilterCoordinator]:
+def _iter_coordinators(
+    hass: HomeAssistant,
+    entry_id: str | None = None,
+) -> list[GPSFilterCoordinator]:
     """Return all loaded GPS Filter coordinators."""
     return [
         coordinator
-        for coordinator in hass.data.get(DOMAIN, {}).values()
+        for loaded_entry_id, coordinator in hass.data.get(DOMAIN, {}).items()
         if isinstance(coordinator, GPSFilterCoordinator)
+        and (entry_id is None or loaded_entry_id == entry_id)
     ]
 
 
@@ -50,11 +63,13 @@ async def async_setup(
         DOMAIN,
         "reset_statistics",
         _async_handle_reset_statistics,
+        schema=RESET_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         "reset_filter",
         _async_handle_reset_filter,
+        schema=RESET_SERVICE_SCHEMA,
     )
 
     return True
