@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -31,12 +31,23 @@ class FilterResult:
 
 
 @dataclass(slots=True)
+class EngineStats:
+    """Statistics for GPS filter decisions."""
+
+    accepted: int = 0
+    duplicate: int = 0
+    accuracy_rejections: int = 0
+    speed_rejections: int = 0
+
+
+@dataclass(slots=True)
 class CoordinatorData:
     """Structured snapshot of coordinator state."""
 
     last_received_point: GPSPoint | None = None
     last_accepted_point: GPSPoint | None = None
     last_result: FilterResult | None = None
+    engine_stats: EngineStats = field(default_factory=EngineStats)
 
 
 @dataclass(slots=True)

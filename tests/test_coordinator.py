@@ -64,3 +64,5 @@ def test_coordinator_updates_last_received_and_preserves_last_accepted_on_reject
     assert coordinator.last_result is not None
     assert coordinator.last_result.accepted is False
     assert coordinator.last_result.reason == "accuracy"
+    assert coordinator.data.engine_stats.accepted == 1
+    assert coordinator.data.engine_stats.accuracy_rejections == 1

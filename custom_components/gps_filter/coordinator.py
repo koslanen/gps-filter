@@ -40,7 +40,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
 
         self._remove_listener = None
-        self.data = CoordinatorData()
+        self.data = CoordinatorData(engine_stats=self.engine.stats)
 
     @property
     def current_point(self) -> GPSPoint | None:
@@ -95,6 +95,8 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if latitude is None or longitude is None:
             return
 
+        latitude = float(latitude)
+        longitude = float(longitude)
         accuracy = float(state.attributes.get("gps_accuracy", 9999))
         speed = float(state.attributes.get("speed", 0))
 
@@ -120,14 +122,20 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             last_received_point=point,
             last_accepted_point=point if result.accepted else self.last_accepted_point,
             last_result=result,
+            engine_stats=self.engine.stats,
         )
 
         self.async_set_updated_data(new_data)
 
         if result.accepted:
             _LOGGER.info(
-                "Accepted: distance=%s m calculated_speed=%s km/h "
-                "reported_speed=%s km/h accuracy=%.1f",
+                "Accepted point:\n"
+                "- reason: %s\n"
+                "- distance: %s m\n"
+                "- calculated speed: %s km/h\n"
+                "- reported speed: %s km/h\n"
+                "- accuracy: %.1f",
+                result.reason,
                 result.distance_m,
                 result.calculated_speed_kmh,
                 result.reported_speed_kmh,
@@ -135,8 +143,12 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             )
         else:
             _LOGGER.info(
-                "Rejected: reason=%s distance=%s m calculated_speed=%s km/h "
-                "reported_speed=%s km/h accuracy=%.1f",
+                "Rejected point:\n"
+                "- reason: %s\n"
+                "- distance: %s m\n"
+                "- calculated speed: %s km/h\n"
+                "- reported speed: %s km/h\n"
+                "- accuracy: %.1f",
                 result.reason,
                 result.distance_m,
                 result.calculated_speed_kmh,

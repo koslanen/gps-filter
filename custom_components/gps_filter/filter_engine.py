@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from math import asin, cos, radians, sin, sqrt
 
-from .models import FilterResult, GPSPoint
+from .models import EngineStats, FilterResult, GPSPoint
 
 EARTH_RADIUS = 6371000.0
 
@@ -38,14 +38,13 @@ class GPSFilterEngine:
         *,
         max_speed: float = 220.0,
         max_accuracy: float = 30.0,
-        max_jump: float = 1000.0,
     ) -> None:
 
         self._max_speed = max_speed
         self._max_accuracy = max_accuracy
-        self._max_jump = max_jump
 
         self._last_point: GPSPoint | None = None
+        self.stats = EngineStats()
 
     def process(
         self,
@@ -54,6 +53,7 @@ class GPSFilterEngine:
         """Process a point."""
 
         if point.accuracy > self._max_accuracy:
+            self.stats.accuracy_rejections += 1
             return FilterResult(
                 accepted=False,
                 reason="accuracy",
@@ -62,10 +62,11 @@ class GPSFilterEngine:
 
         if self._last_point is None:
             self._last_point = point
+            self.stats.accepted += 1
 
             return FilterResult(
                 accepted=True,
-                reason="",
+                reason="first_point",
                 point=point,
             )
 
@@ -90,6 +91,7 @@ class GPSFilterEngine:
             point.latitude == self._last_point.latitude
             and point.longitude == self._last_point.longitude
         ):
+            self.stats.duplicate += 1
             return FilterResult(
                 accepted=False,
                 reason="duplicate",
@@ -99,17 +101,8 @@ class GPSFilterEngine:
                 reported_speed_kmh=reported_speed_kmh,
             )
 
-        if distance > self._max_jump:
-            return FilterResult(
-                accepted=False,
-                reason="jump",
-                point=None,
-                distance_m=distance,
-                calculated_speed_kmh=calculated_speed_kmh,
-                reported_speed_kmh=reported_speed_kmh,
-            )
-
         if calculated_speed_kmh > self._max_speed:
+            self.stats.speed_rejections += 1
             return FilterResult(
                 accepted=False,
                 reason="speed",
@@ -120,10 +113,11 @@ class GPSFilterEngine:
             )
 
         self._last_point = point
+        self.stats.accepted += 1
 
         return FilterResult(
             accepted=True,
-            reason="",
+            reason="accepted",
             point=point,
             distance_m=distance,
             calculated_speed_kmh=calculated_speed_kmh,
