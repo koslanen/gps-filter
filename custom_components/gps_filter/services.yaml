@@ -1,0 +1,9 @@
+reset_filter:
+  name: Reset filter
+  description: Reset the GPS filter state and statistics.
+  fields: {}
+
+reset_statistics:
+  name: Reset statistics
+  description: Reset the diagnostic counters for the GPS filter.
+  fields: {}

@@ -3,16 +3,36 @@
 from __future__ import annotations
 
 import logging
+from collections import deque
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED
 from .filter_engine import GPSFilterEngine
-from .models import CoordinatorData, FilterResult, GPSPoint
+from .models import CoordinatorData, FilterResult, FilterTimelineEntry, GPSPoint
 
 _LOGGER = logging.getLogger(__name__)
+FILTER_TIMELINE_MAXLEN = 50
+
+
+def _coerce_float(value: Any, default: float | None = None) -> float | None:
+    """Return a float value, or a default when the value cannot be parsed."""
+    if value is None:
+        return default
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _get_config_value(entry: ConfigEntry, key: str) -> Any:
+    """Return an option value, falling back to config entry data."""
+    return getattr(entry, "options", {}).get(key, entry.data[key])
 
 
 class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -35,11 +55,14 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.source_entity = entry.data["source"]
 
         self.engine = GPSFilterEngine(
-            max_speed=entry.data["max_speed"],
-            max_accuracy=entry.data["max_accuracy"],
+            max_speed=_get_config_value(entry, CONF_MAX_SPEED),
+            max_accuracy=_get_config_value(entry, CONF_MAX_ACCURACY),
         )
 
         self._remove_listener = None
+        self.filter_timeline: deque[FilterTimelineEntry] = deque(
+            maxlen=FILTER_TIMELINE_MAXLEN
+        )
         self.data = CoordinatorData(engine_stats=self.engine.stats)
 
     @property
@@ -89,16 +112,14 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if state is None:
             return
 
-        latitude = state.attributes.get("latitude")
-        longitude = state.attributes.get("longitude")
+        latitude = _coerce_float(state.attributes.get("latitude"))
+        longitude = _coerce_float(state.attributes.get("longitude"))
 
         if latitude is None or longitude is None:
             return
 
-        latitude = float(latitude)
-        longitude = float(longitude)
-        accuracy = float(state.attributes.get("gps_accuracy", 9999))
-        speed = float(state.attributes.get("speed", 0))
+        accuracy = _coerce_float(state.attributes.get("gps_accuracy"), 9999.0)
+        speed = _coerce_float(state.attributes.get("speed"))
 
         point = GPSPoint(
             latitude=latitude,
@@ -108,15 +129,28 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             speed=speed,
         )
 
-        _LOGGER.info(
-            "Received: lat=%.7f lon=%.7f acc=%.1f speed=%.1f",
+        _LOGGER.debug(
+            "Received: lat=%.7f lon=%.7f acc=%.1f speed=%s",
             latitude,
             longitude,
             accuracy,
-            speed,
+            speed if speed is not None else "unknown",
         )
 
         result = self.engine.process(point)
+        self.filter_timeline.append(
+            FilterTimelineEntry(
+                timestamp=point.timestamp,
+                accepted=result.accepted,
+                reason=result.reason,
+                latitude=point.latitude,
+                longitude=point.longitude,
+                accuracy=point.accuracy,
+                distance_m=result.distance_m,
+                calculated_speed_kmh=result.calculated_speed_kmh,
+                reported_speed_kmh=result.reported_speed_kmh,
+            )
+        )
 
         new_data = CoordinatorData(
             last_received_point=point,
@@ -128,7 +162,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.async_set_updated_data(new_data)
 
         if result.accepted:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Accepted point:\n"
                 "- reason: %s\n"
                 "- distance: %s m\n"
@@ -142,7 +176,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 accuracy,
             )
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Rejected point:\n"
                 "- reason: %s\n"
                 "- distance: %s m\n"
@@ -158,23 +192,36 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     def reset_statistics(self) -> None:
         """Reset filter statistics."""
-        self.data.engine_stats = self.engine.stats = type(self.engine.stats)()
-        self.async_set_updated_data(self.data)
+        _LOGGER.info(
+            "Resetting GPS Filter statistics for %s",
+            self.source_entity,
+        )
+        self.engine.stats = type(self.engine.stats)()
+        self.async_set_updated_data(
+            CoordinatorData(
+                last_received_point=self.last_received_point,
+                last_accepted_point=self.last_accepted_point,
+                last_result=self.last_result,
+                engine_stats=self.engine.stats,
+            )
+        )
 
     def reset_filter(self) -> None:
         """Reset the filter engine state and statistics."""
-        self.engine = GPSFilterEngine(
-            max_speed=self.entry.data["max_speed"],
-            max_accuracy=self.entry.data["max_accuracy"],
+        _LOGGER.info(
+            "Resetting GPS Filter state for %s",
+            self.source_entity,
         )
-        self.data.engine_stats = self.engine.stats
-        self.data.last_result = None
-        self.data.last_received_point = None
-        self.data.last_accepted_point = None
-        self.async_set_updated_data(self.data)
+        self.engine = GPSFilterEngine(
+            max_speed=_get_config_value(self.entry, CONF_MAX_SPEED),
+            max_accuracy=_get_config_value(self.entry, CONF_MAX_ACCURACY),
+        )
+        self.filter_timeline.clear()
+        self.async_set_updated_data(CoordinatorData(engine_stats=self.engine.stats))
 
     async def async_stop(self) -> None:
         """Stop listening."""
 
         if self._remove_listener is not None:
             self._remove_listener()
+            self._remove_listener = None

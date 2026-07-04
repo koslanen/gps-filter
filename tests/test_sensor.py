@@ -105,3 +105,43 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert speed_rejections_sensor.native_value == 0
     assert last_reason_sensor.native_value == "unknown"
     assert last_accuracy_sensor.native_value == 0.0
+
+
+def test_sensor_entities_use_gps_filter_prefixed_entity_ids():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+
+    status_sensor = GPSFilterStatusSensor(coordinator)
+    distance_sensor = GPSFilterDistanceSensor(coordinator)
+    calculated_speed_sensor = GPSFilterCalculatedSpeedSensor(coordinator)
+    reported_speed_sensor = GPSFilterReportedSpeedSensor(coordinator)
+    last_reason_sensor = GPSFilterLastReasonSensor(coordinator)
+    last_accuracy_sensor = GPSFilterLastAccuracySensor(coordinator)
+    accepted_count_sensor = GPSFilterAcceptedCountSensor(coordinator)
+    duplicate_count_sensor = GPSFilterDuplicateCountSensor(coordinator)
+    accuracy_rejections_sensor = GPSFilterAccuracyRejectionsSensor(coordinator)
+    speed_rejections_sensor = GPSFilterSpeedRejectionsSensor(coordinator)
+
+    status_sensor.entity_id = "sensor.gps_filter_status"
+    distance_sensor.entity_id = "sensor.gps_filter_distance"
+    calculated_speed_sensor.entity_id = "sensor.gps_filter_calculated_speed"
+    reported_speed_sensor.entity_id = "sensor.gps_filter_reported_speed"
+    last_reason_sensor.entity_id = "sensor.gps_filter_last_reason"
+    last_accuracy_sensor.entity_id = "sensor.gps_filter_last_accuracy"
+    accepted_count_sensor.entity_id = "sensor.gps_filter_accepted_count"
+    duplicate_count_sensor.entity_id = "sensor.gps_filter_duplicate_count"
+    accuracy_rejections_sensor.entity_id = "sensor.gps_filter_accuracy_rejections"
+    speed_rejections_sensor.entity_id = "sensor.gps_filter_speed_rejections"
+
+    assert status_sensor.entity_id == "sensor.gps_filter_status"
+    assert distance_sensor.entity_id == "sensor.gps_filter_distance"
+    assert calculated_speed_sensor.entity_id == "sensor.gps_filter_calculated_speed"
+    assert reported_speed_sensor.entity_id == "sensor.gps_filter_reported_speed"
+    assert last_reason_sensor.entity_id == "sensor.gps_filter_last_reason"
+    assert last_accuracy_sensor.entity_id == "sensor.gps_filter_last_accuracy"
+    assert accepted_count_sensor.entity_id == "sensor.gps_filter_accepted_count"
+    assert duplicate_count_sensor.entity_id == "sensor.gps_filter_duplicate_count"
+    assert (
+        accuracy_rejections_sensor.entity_id
+        == "sensor.gps_filter_accuracy_rejections"
+    )
+    assert speed_rejections_sensor.entity_id == "sensor.gps_filter_speed_rejections"

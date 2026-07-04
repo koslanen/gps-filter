@@ -71,3 +71,58 @@ def test_diagnostics_report_contains_expected_fields():
     assert result["last_received_point"]["latitude"] == 60.0
     assert result["last_accepted_point"]["latitude"] == 60.0
     assert result["last_filter_result"]["reason"] == "accepted"
+    assert result["filter_timeline"] == []
+
+
+def test_diagnostics_report_contains_filter_timeline():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    first_state = SimpleNamespace(
+        attributes={
+            "latitude": 60.0,
+            "longitude": 25.0,
+            "gps_accuracy": 5.0,
+            "speed": 0.0,
+        },
+        last_updated=datetime(2024, 1, 1, tzinfo=UTC),
+    )
+    second_state = SimpleNamespace(
+        attributes={
+            "latitude": 60.0,
+            "longitude": 25.0,
+            "gps_accuracy": 5.0,
+            "speed": 0.0,
+        },
+        last_updated=datetime(2024, 1, 1, 0, 0, 1, tzinfo=UTC),
+    )
+    coordinator._state_changed(SimpleNamespace(data={"new_state": first_state}))
+    coordinator._state_changed(SimpleNamespace(data={"new_state": second_state}))
+
+    hass = SimpleNamespace(data={"gps_filter": {"entry-1": coordinator}})
+    entry = DummyEntry()
+
+    result = asyncio.run(async_get_config_entry_diagnostics(hass, entry))
+
+    assert result["filter_timeline"] == [
+        {
+            "timestamp": "2024-01-01T00:00:00+00:00",
+            "accepted": True,
+            "reason": "first_point",
+            "latitude": 60.0,
+            "longitude": 25.0,
+            "accuracy": 5.0,
+            "distance_m": None,
+            "calculated_speed_kmh": None,
+            "reported_speed_kmh": None,
+        },
+        {
+            "timestamp": "2024-01-01T00:00:01+00:00",
+            "accepted": False,
+            "reason": "duplicate",
+            "latitude": 60.0,
+            "longitude": 25.0,
+            "accuracy": 5.0,
+            "distance_m": 0.0,
+            "calculated_speed_kmh": 0.0,
+            "reported_speed_kmh": 0.0,
+        },
+    ]

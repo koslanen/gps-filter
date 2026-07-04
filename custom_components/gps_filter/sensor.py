@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,12 +22,16 @@ class GPSFilterSensor(CoordinatorEntity[GPSFilterCoordinator], SensorEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = True
+    translation_key: str | None = None
 
     def __init__(self, coordinator: GPSFilterCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.entry.entry_id}_{self.entity_key}"
+        self._attr_translation_key = self.translation_key
+        self._attr_name = None
+        self._attr_entity_id = f"sensor.gps_filter_{self.entity_key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.entry.entry_id)},
             "name": "GPS Filter",
@@ -44,7 +49,7 @@ class GPSFilterStatusSensor(GPSFilterSensor):
     """Expose the latest filter decision state."""
 
     entity_key = "status"
-    _attr_name = "Status"
+    translation_key = "status"
     _attr_icon = "mdi:filter-check"
 
     @property
@@ -70,9 +75,9 @@ class GPSFilterCalculatedSpeedSensor(GPSFilterSensor):
     """Expose the calculated speed from the last accepted point."""
 
     entity_key = "calculated_speed"
-    _attr_name = "Calculated Speed"
+    translation_key = "calculated_speed"
     _attr_icon = "mdi:speedometer"
-    _attr_native_unit_of_measurement = "km/h"
+    _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_device_class = SensorDeviceClass.SPEED
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -89,9 +94,9 @@ class GPSFilterReportedSpeedSensor(GPSFilterSensor):
     """Expose the reported speed from the last processed point."""
 
     entity_key = "reported_speed"
-    _attr_name = "Reported Speed"
+    translation_key = "reported_speed"
     _attr_icon = "mdi:speedometer"
-    _attr_native_unit_of_measurement = "km/h"
+    _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_device_class = SensorDeviceClass.SPEED
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -108,9 +113,9 @@ class GPSFilterDistanceSensor(GPSFilterSensor):
     """Expose the distance from the last processed point."""
 
     entity_key = "distance"
-    _attr_name = "Distance"
+    translation_key = "distance"
     _attr_icon = "mdi:ruler"
-    _attr_native_unit_of_measurement = "m"
+    _attr_native_unit_of_measurement = UnitOfLength.METERS
     _attr_device_class = SensorDeviceClass.DISTANCE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -127,7 +132,7 @@ class GPSFilterLastReasonSensor(GPSFilterSensor):
     """Expose the last filter reason."""
 
     entity_key = "last_reason"
-    _attr_name = "Last Reason"
+    translation_key = "last_reason"
     _attr_icon = "mdi:information-outline"
 
     @property
@@ -143,9 +148,9 @@ class GPSFilterLastAccuracySensor(GPSFilterSensor):
     """Expose the last received accuracy."""
 
     entity_key = "last_accuracy"
-    _attr_name = "Last Accuracy"
+    translation_key = "last_accuracy"
     _attr_icon = "mdi:crosshairs-gps"
-    _attr_native_unit_of_measurement = "m"
+    _attr_native_unit_of_measurement = UnitOfLength.METERS
     _attr_device_class = SensorDeviceClass.DISTANCE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -161,7 +166,7 @@ class GPSFilterAcceptedCountSensor(GPSFilterSensor):
     """Expose the number of accepted points."""
 
     entity_key = "accepted_count"
-    _attr_name = "Accepted Count"
+    translation_key = "accepted_count"
     _attr_icon = "mdi:check-circle-outline"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -175,7 +180,7 @@ class GPSFilterDuplicateCountSensor(GPSFilterSensor):
     """Expose the number of duplicate points."""
 
     entity_key = "duplicate_count"
-    _attr_name = "Duplicate Count"
+    translation_key = "duplicate_count"
     _attr_icon = "mdi:content-duplicate"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -189,7 +194,7 @@ class GPSFilterAccuracyRejectionsSensor(GPSFilterSensor):
     """Expose the number of accuracy rejections."""
 
     entity_key = "accuracy_rejections"
-    _attr_name = "Accuracy Rejections"
+    translation_key = "accuracy_rejections"
     _attr_icon = "mdi:alert-circle-outline"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -203,7 +208,7 @@ class GPSFilterSpeedRejectionsSensor(GPSFilterSensor):
     """Expose the number of speed rejections."""
 
     entity_key = "speed_rejections"
-    _attr_name = "Speed Rejections"
+    translation_key = "speed_rejections"
     _attr_icon = "mdi:alert-outline"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 

@@ -11,5 +11,61 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "GPS Filter Options",
+        "description": "Update GPS filter thresholds.",
+        "data": {
+          "max_speed": "Maximum speed (km/h)",
+          "max_accuracy": "Maximum GPS accuracy (m)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "calculated_speed": {
+        "name": "Calculated Speed"
+      },
+      "reported_speed": {
+        "name": "Reported Speed"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "last_reason": {
+        "name": "Last Reason"
+      },
+      "last_accuracy": {
+        "name": "Last Accuracy"
+      },
+      "accepted_count": {
+        "name": "Accepted Count"
+      },
+      "duplicate_count": {
+        "name": "Duplicate Count"
+      },
+      "accuracy_rejections": {
+        "name": "Accuracy Rejections"
+      },
+      "speed_rejections": {
+        "name": "Speed Rejections"
+      }
+    }
+  },
+  "services": {
+    "reset_filter": {
+      "name": "Reset filter",
+      "description": "Reset the GPS filter state and statistics."
+    },
+    "reset_statistics": {
+      "name": "Reset statistics",
+      "description": "Reset the diagnostic counters for the GPS filter."
+    }
   }
 }

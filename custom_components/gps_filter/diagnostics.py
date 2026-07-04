@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .models import FilterResult, GPSPoint
+from .models import FilterResult, FilterTimelineEntry, GPSPoint
 
 
 def _redact_config_value(key: str, value: Any) -> Any:
@@ -50,6 +50,21 @@ def _serialize_filter_result(result: FilterResult | None) -> dict[str, Any] | No
     }
 
 
+def _serialize_timeline_entry(entry: FilterTimelineEntry) -> dict[str, Any]:
+    """Serialize a filter timeline entry for diagnostics output."""
+    return {
+        "timestamp": entry.timestamp.isoformat(),
+        "accepted": entry.accepted,
+        "reason": entry.reason,
+        "latitude": entry.latitude,
+        "longitude": entry.longitude,
+        "accuracy": entry.accuracy,
+        "distance_m": entry.distance_m,
+        "calculated_speed_kmh": entry.calculated_speed_kmh,
+        "reported_speed_kmh": entry.reported_speed_kmh,
+    }
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -58,6 +73,10 @@ async def async_get_config_entry_diagnostics(
 
     coordinator = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     data = getattr(coordinator, "data", None)
+    filter_timeline = [
+        _serialize_timeline_entry(timeline_entry)
+        for timeline_entry in getattr(coordinator, "filter_timeline", ())
+    ]
 
     manifest_path = Path(__file__).with_name("manifest.json")
     version = None
@@ -81,6 +100,7 @@ async def async_get_config_entry_diagnostics(
             "last_received_point": None,
             "last_accepted_point": None,
             "last_filter_result": None,
+            "filter_timeline": filter_timeline,
         }
 
     stats = getattr(data, "engine_stats", None)
@@ -95,4 +115,5 @@ async def async_get_config_entry_diagnostics(
         "last_received_point": _serialize_gps_point(data.last_received_point),
         "last_accepted_point": _serialize_gps_point(data.last_accepted_point),
         "last_filter_result": _serialize_filter_result(data.last_result),
+        "filter_timeline": filter_timeline,
     }

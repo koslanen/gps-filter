@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def _async_handle_reset_statistics(call: ServiceCall) -> None:
     """Reset filter statistics for all entries."""
+    _LOGGER.info("Resetting GPS Filter statistics")
     for coordinator in _iter_coordinators(call.hass):
         coordinator.reset_statistics()
 
@@ -23,6 +24,7 @@ def _async_handle_reset_statistics(call: ServiceCall) -> None:
 @callback
 def _async_handle_reset_filter(call: ServiceCall) -> None:
     """Reset filter state and statistics for all entries."""
+    _LOGGER.info("Resetting GPS Filter state")
     for coordinator in _iter_coordinators(call.hass):
         coordinator.reset_filter()
 
@@ -58,6 +60,15 @@ async def async_setup(
     return True
 
 
+async def _async_update_listener(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> None:
+    """Handle options updates."""
+    _LOGGER.info("Reloading GPS Filter after options update")
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -72,6 +83,7 @@ async def async_setup_entry(
     await coordinator.async_start()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -95,8 +107,9 @@ async def async_unload_entry(
     if unload_ok:
         coordinator: GPSFilterCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.async_stop()
+        _LOGGER.info("Unloaded GPS Filter for %s", coordinator.source_entity)
 
-    if not hass.config_entries.async_entries(DOMAIN):
+    if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, "reset_statistics")
         hass.services.async_remove(DOMAIN, "reset_filter")
 

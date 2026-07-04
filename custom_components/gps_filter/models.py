@@ -31,6 +31,21 @@ class FilterResult:
 
 
 @dataclass(slots=True)
+class FilterTimelineEntry:
+    """A compact record of one filter decision."""
+
+    timestamp: datetime
+    accepted: bool
+    reason: str
+    latitude: float
+    longitude: float
+    accuracy: float
+    distance_m: float | None = None
+    calculated_speed_kmh: float | None = None
+    reported_speed_kmh: float | None = None
+
+
+@dataclass(slots=True)
 class EngineStats:
     """Statistics for GPS filter decisions."""
 

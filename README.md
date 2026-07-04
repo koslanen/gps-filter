@@ -1,50 +1,168 @@
 # GPS Filter
 
-A Home Assistant custom integration that filters noisy GPS updates from a source `device_tracker` entity and exposes a cleaner filtered tracker.
+GPS Filter is a Home Assistant custom integration that listens to a source
+`device_tracker` entity, rejects noisy GPS updates, and exposes a cleaner
+filtered tracker for dashboards, automations, and real-world testing.
+
+The integration is currently focused on observability and evidence-based tuning.
+Filtering behavior is intentionally simple until enough drive data has been
+collected.
 
 ## Features
 
-- Config flow for selecting a source entity and tuning filter thresholds
-- Live GPS filtering with a coordinator-based architecture
-- Rejects points that are:
-  - too inaccurate
-  - duplicated
-  - moving too fast based on calculated speed
-- Exposes the last received point, last accepted point, last filter result, and engine statistics through the coordinator state
-- Logs accepted and rejected updates with distance, speed, and accuracy details
-- Provides diagnostics for the config entry with version, configuration values, filter statistics, and recent GPS state
+- Config flow for selecting a source `device_tracker`
+- Options flow for tuning thresholds after setup
+- Coordinator-based runtime state
+- Filtered GPS `device_tracker`
+- Diagnostic sensor platform for dashboards
+- Config entry diagnostics
+- Reset services
+- In-memory filter timeline with the latest 50 decisions
+- Unit tests and GitHub Actions validation
 
-## How it works
+## Filter Behavior
 
-1. The integration listens to a configured source `device_tracker` entity.
-2. Each update is converted into a GPS point and passed through the filter engine.
-3. The filter engine keeps the last accepted point and only forwards updates that pass the checks.
-4. A Home Assistant device tracker entity exposes the filtered location.
+The current filter accepts the first valid point, then rejects updates when:
+
+- GPS accuracy exceeds the configured maximum accuracy
+- The incoming point is an exact duplicate of the last accepted point
+- The calculated movement speed exceeds the configured maximum speed
+
+The integration tracks both calculated speed and reported source speed. Reported
+speed is converted from m/s to km/h when present.
+
+## Entities
+
+### Device Tracker
+
+- `device_tracker.filtered`
+
+The filtered tracker exposes the most recent accepted GPS position.
+
+### Diagnostic Sensors
+
+- `sensor.gps_filter_status`
+- `sensor.gps_filter_distance`
+- `sensor.gps_filter_calculated_speed`
+- `sensor.gps_filter_reported_speed`
+- `sensor.gps_filter_last_reason`
+- `sensor.gps_filter_last_accuracy`
+- `sensor.gps_filter_accepted_count`
+- `sensor.gps_filter_duplicate_count`
+- `sensor.gps_filter_accuracy_rejections`
+- `sensor.gps_filter_speed_rejections`
+
+These sensors are intended for a developer/debug dashboard during drive testing.
 
 ## Configuration
 
-1. Install the integration into your Home Assistant `custom_components` directory.
+1. Copy `custom_components/gps_filter` into your Home Assistant
+   `custom_components` directory.
 2. Restart Home Assistant.
-3. Add the integration from Settings → Devices & Services → Add Integration.
-4. Choose the source `device_tracker` entity and set:
-   - maximum speed (km/h)
-   - maximum GPS accuracy
+3. Go to Settings -> Devices & services -> Add integration.
+4. Search for GPS Filter.
+5. Select the source `device_tracker`.
+6. Set:
+   - Maximum speed in km/h
+   - Maximum GPS accuracy in meters
 
-## Filter behavior
+Both threshold values must be greater than zero.
 
-The engine currently accepts the first point, then rejects updates when:
+## Options
 
-- GPS accuracy exceeds the configured threshold
-- the incoming point is an exact duplicate of the previous point
-- the calculated movement speed exceeds the configured maximum
+After setup, thresholds can be edited from the integration options:
+
+- Maximum speed
+- Maximum GPS accuracy
+
+Changing options reloads the config entry so the coordinator and filter engine
+use the updated values.
 
 ## Services
 
 The integration exposes two services:
 
-- `gps_filter.reset_statistics` — clears the accumulated filter statistics
-- `gps_filter.reset_filter` — clears statistics and resets the filter engine so the next accepted point becomes a new first point
+- `gps_filter.reset_statistics`
+  - Clears diagnostic counters while keeping the current accepted GPS point.
+- `gps_filter.reset_filter`
+  - Clears statistics, resets filter state, clears the in-memory timeline, and
+    makes the next accepted point a new first point.
+
+## Diagnostics
+
+Config entry diagnostics include:
+
+- Integration version
+- Redacted configuration
+- Filter statistics
+- Last received point
+- Last accepted point
+- Last filter result
+- Filter timeline
+
+The filter timeline is in-memory only and keeps the latest 50 processed filter
+decisions. Each timeline entry contains:
+
+- timestamp
+- accepted
+- reason
+- latitude
+- longitude
+- accuracy
+- distance_m
+- calculated_speed_kmh
+- reported_speed_kmh
+
+The timeline is not persisted and is reset when Home Assistant restarts or when
+`gps_filter.reset_filter` is called.
+
+## Logging
+
+Routine GPS update diagnostics are logged at `DEBUG` level. This keeps normal
+logs quieter during longer drives while preserving detailed per-point data when
+debug logging is enabled.
+
+Lifecycle events such as setup, unload, options reload, and reset services are
+logged at `INFO` level.
+
+Example logger configuration:
+
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.gps_filter: debug
+```
+
+## Suggested Test Drive Workflow
+
+1. Confirm the source tracker is updating in Home Assistant.
+2. Open a dashboard with the GPS Filter diagnostic sensors.
+3. Call `gps_filter.reset_filter` before starting a test drive.
+4. Drive normally.
+5. Review:
+   - Current filtered tracker position
+   - Status and last reason sensors
+   - Accuracy, distance, calculated speed, and reported speed
+   - Accepted and rejected counters
+   - Config entry diagnostics and filter timeline
+
+Use the collected data to tune existing thresholds before changing the filter
+algorithm.
 
 ## Development
 
-The project includes unit tests for the filter engine, coordinator flow, diagnostics, and service behavior.
+Install dependencies in your local environment, then run:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m pytest
+```
+
+The test suite covers the filter engine, coordinator behavior, config flow,
+options flow, diagnostics, sensors, and services.
+
+## Current Status
+
+GPS Filter is under active real-world testing. The immediate goal is a reliable
+debugging and tuning workflow before adding any new filtering algorithms.
