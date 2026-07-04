@@ -27,6 +27,8 @@ async def async_setup_entry(
         entry,
     )
 
+    await coordinator.async_start()
+
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(
@@ -49,6 +51,9 @@ async def async_unload_entry(
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: GPSFilterCoordinator = hass.data[DOMAIN].pop(
+            entry.entry_id
+        )
+        await coordinator.async_stop()
 
     return unload_ok
