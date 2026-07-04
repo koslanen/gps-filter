@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 import homeassistant.helpers.frame as frame
 import pytest
+from homeassistant.components.sensor import SensorStateClass
 
 from custom_components.gps_filter.coordinator import GPSFilterCoordinator
 from custom_components.gps_filter.models import (
@@ -9,33 +10,44 @@ from custom_components.gps_filter.models import (
     EngineStats,
     FilterResult,
 )
-from custom_components.gps_filter.sensor import (
-    GPSFilterAcceptedCountSensor,
-    GPSFilterAccuracyRejectionsSensor,
-    GPSFilterCalculatedSpeedSensor,
-    GPSFilterDistanceSensor,
-    GPSFilterDuplicateCountSensor,
-    GPSFilterLastAccuracySensor,
-    GPSFilterLastReasonSensor,
-    GPSFilterReportedSpeedSensor,
-    GPSFilterSpeedRejectionsSensor,
-    GPSFilterStatusSensor,
-)
+from custom_components.gps_filter.sensor import SENSOR_DESCRIPTIONS, GPSFilterSensor
+
+EXPECTED_ENTITY_IDS = [
+    "sensor.gps_filter_status",
+    "sensor.gps_filter_distance",
+    "sensor.gps_filter_calculated_speed",
+    "sensor.gps_filter_reported_speed",
+    "sensor.gps_filter_last_reason",
+    "sensor.gps_filter_last_accuracy",
+    "sensor.gps_filter_accepted_count",
+    "sensor.gps_filter_duplicate_count",
+    "sensor.gps_filter_accuracy_rejections",
+    "sensor.gps_filter_speed_rejections",
+]
 
 
 class DummyEntry:
     def __init__(self) -> None:
         self.entry_id = "entry-1"
+        self.title = "GPS Filter - Test Tracker"
         self.data = {
             "source": "device_tracker.test",
             "max_speed": 220.0,
             "max_accuracy": 30.0,
         }
+        self.options = {}
 
 
 @pytest.fixture(autouse=True)
 def _disable_frame_reporting(monkeypatch):
     monkeypatch.setattr(frame, "report_usage", lambda *args, **kwargs: None)
+
+
+def _make_sensors(coordinator):
+    return {
+        description.key: GPSFilterSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+    }
 
 
 def test_sensor_entities_expose_coordinator_state():
@@ -57,91 +69,88 @@ def test_sensor_entities_expose_coordinator_state():
         ),
     )
 
-    status_sensor = GPSFilterStatusSensor(coordinator)
-    calculated_speed_sensor = GPSFilterCalculatedSpeedSensor(coordinator)
-    reported_speed_sensor = GPSFilterReportedSpeedSensor(coordinator)
-    distance_sensor = GPSFilterDistanceSensor(coordinator)
-    accepted_count_sensor = GPSFilterAcceptedCountSensor(coordinator)
-    duplicate_count_sensor = GPSFilterDuplicateCountSensor(coordinator)
-    accuracy_rejections_sensor = GPSFilterAccuracyRejectionsSensor(coordinator)
-    speed_rejections_sensor = GPSFilterSpeedRejectionsSensor(coordinator)
-    last_reason_sensor = GPSFilterLastReasonSensor(coordinator)
-    last_accuracy_sensor = GPSFilterLastAccuracySensor(coordinator)
+    sensors = _make_sensors(coordinator)
 
-    assert status_sensor.native_value == "accepted"
-    assert calculated_speed_sensor.native_value == 12.5
-    assert reported_speed_sensor.native_value == 10.0
-    assert distance_sensor.native_value == 42.0
-    assert accepted_count_sensor.native_value == 2
-    assert duplicate_count_sensor.native_value == 1
-    assert accuracy_rejections_sensor.native_value == 3
-    assert speed_rejections_sensor.native_value == 4
-    assert last_reason_sensor.native_value == "accepted"
-    assert last_accuracy_sensor.native_value == 5.0
+    assert sensors["status"].native_value == "accepted"
+    assert sensors["distance"].native_value == 42.0
+    assert sensors["calculated_speed"].native_value == 12.5
+    assert sensors["reported_speed"].native_value == 10.0
+    assert sensors["last_reason"].native_value == "accepted"
+    assert sensors["last_accuracy"].native_value == 5.0
+    assert sensors["accepted_count"].native_value == 2
+    assert sensors["duplicate_count"].native_value == 1
+    assert sensors["accuracy_rejections"].native_value == 3
+    assert sensors["speed_rejections"].native_value == 4
 
 
 def test_sensor_entities_default_to_valid_dashboard_states():
     coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
     coordinator.data = CoordinatorData(engine_stats=EngineStats())
 
-    status_sensor = GPSFilterStatusSensor(coordinator)
-    calculated_speed_sensor = GPSFilterCalculatedSpeedSensor(coordinator)
-    reported_speed_sensor = GPSFilterReportedSpeedSensor(coordinator)
-    distance_sensor = GPSFilterDistanceSensor(coordinator)
-    accepted_count_sensor = GPSFilterAcceptedCountSensor(coordinator)
-    duplicate_count_sensor = GPSFilterDuplicateCountSensor(coordinator)
-    accuracy_rejections_sensor = GPSFilterAccuracyRejectionsSensor(coordinator)
-    speed_rejections_sensor = GPSFilterSpeedRejectionsSensor(coordinator)
-    last_reason_sensor = GPSFilterLastReasonSensor(coordinator)
-    last_accuracy_sensor = GPSFilterLastAccuracySensor(coordinator)
+    sensors = _make_sensors(coordinator)
 
-    assert status_sensor.native_value == "unknown"
-    assert calculated_speed_sensor.native_value == 0.0
-    assert reported_speed_sensor.native_value == 0.0
-    assert distance_sensor.native_value == 0.0
-    assert accepted_count_sensor.native_value == 0
-    assert duplicate_count_sensor.native_value == 0
-    assert accuracy_rejections_sensor.native_value == 0
-    assert speed_rejections_sensor.native_value == 0
-    assert last_reason_sensor.native_value == "unknown"
-    assert last_accuracy_sensor.native_value == 0.0
+    assert sensors["status"].native_value == "unknown"
+    assert sensors["distance"].native_value == 0.0
+    assert sensors["calculated_speed"].native_value == 0.0
+    assert sensors["reported_speed"].native_value == 0.0
+    assert sensors["last_reason"].native_value == "unknown"
+    assert sensors["last_accuracy"].native_value == 0.0
+    assert sensors["accepted_count"].native_value == 0
+    assert sensors["duplicate_count"].native_value == 0
+    assert sensors["accuracy_rejections"].native_value == 0
+    assert sensors["speed_rejections"].native_value == 0
 
 
-def test_sensor_entities_use_gps_filter_prefixed_entity_ids():
+def test_sensor_descriptions_follow_home_assistant_entity_id_conventions():
     coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    sensors = [
+        GPSFilterSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+    ]
 
-    status_sensor = GPSFilterStatusSensor(coordinator)
-    distance_sensor = GPSFilterDistanceSensor(coordinator)
-    calculated_speed_sensor = GPSFilterCalculatedSpeedSensor(coordinator)
-    reported_speed_sensor = GPSFilterReportedSpeedSensor(coordinator)
-    last_reason_sensor = GPSFilterLastReasonSensor(coordinator)
-    last_accuracy_sensor = GPSFilterLastAccuracySensor(coordinator)
-    accepted_count_sensor = GPSFilterAcceptedCountSensor(coordinator)
-    duplicate_count_sensor = GPSFilterDuplicateCountSensor(coordinator)
-    accuracy_rejections_sensor = GPSFilterAccuracyRejectionsSensor(coordinator)
-    speed_rejections_sensor = GPSFilterSpeedRejectionsSensor(coordinator)
+    expected_keys = [
+        entity_id.removeprefix("sensor.gps_filter_")
+        for entity_id in EXPECTED_ENTITY_IDS
+    ]
 
-    status_sensor.entity_id = "sensor.gps_filter_status"
-    distance_sensor.entity_id = "sensor.gps_filter_distance"
-    calculated_speed_sensor.entity_id = "sensor.gps_filter_calculated_speed"
-    reported_speed_sensor.entity_id = "sensor.gps_filter_reported_speed"
-    last_reason_sensor.entity_id = "sensor.gps_filter_last_reason"
-    last_accuracy_sensor.entity_id = "sensor.gps_filter_last_accuracy"
-    accepted_count_sensor.entity_id = "sensor.gps_filter_accepted_count"
-    duplicate_count_sensor.entity_id = "sensor.gps_filter_duplicate_count"
-    accuracy_rejections_sensor.entity_id = "sensor.gps_filter_accuracy_rejections"
-    speed_rejections_sensor.entity_id = "sensor.gps_filter_speed_rejections"
+    assert [sensor.entity_description.key for sensor in sensors] == expected_keys
+    assert [
+        sensor.entity_description.translation_key for sensor in sensors
+    ] == expected_keys
+    assert [sensor.unique_id for sensor in sensors] == [
+        f"entry-1_{key}" for key in expected_keys
+    ]
+    assert all(sensor.has_entity_name for sensor in sensors)
+    assert all("_attr_entity_id" not in sensor.__dict__ for sensor in sensors)
 
-    assert status_sensor.entity_id == "sensor.gps_filter_status"
-    assert distance_sensor.entity_id == "sensor.gps_filter_distance"
-    assert calculated_speed_sensor.entity_id == "sensor.gps_filter_calculated_speed"
-    assert reported_speed_sensor.entity_id == "sensor.gps_filter_reported_speed"
-    assert last_reason_sensor.entity_id == "sensor.gps_filter_last_reason"
-    assert last_accuracy_sensor.entity_id == "sensor.gps_filter_last_accuracy"
-    assert accepted_count_sensor.entity_id == "sensor.gps_filter_accepted_count"
-    assert duplicate_count_sensor.entity_id == "sensor.gps_filter_duplicate_count"
-    assert (
-        accuracy_rejections_sensor.entity_id
-        == "sensor.gps_filter_accuracy_rejections"
-    )
-    assert speed_rejections_sensor.entity_id == "sensor.gps_filter_speed_rejections"
+
+def test_sensor_entities_share_gps_filter_device_info():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    sensor = GPSFilterSensor(coordinator, SENSOR_DESCRIPTIONS[0])
+
+    assert sensor.device_info == {
+        "identifiers": {("gps_filter", "entry-1")},
+        "name": "GPS Filter - Test Tracker",
+        "manufacturer": "GPS Filter",
+        "model": "Filtered Tracker",
+    }
+
+
+def test_only_counter_sensors_compile_long_term_statistics():
+    state_classes = {
+        description.key: description.state_class
+        for description in SENSOR_DESCRIPTIONS
+    }
+
+    assert state_classes == {
+        "status": None,
+        "distance": None,
+        "calculated_speed": None,
+        "reported_speed": None,
+        "last_reason": None,
+        "last_accuracy": None,
+        "accepted_count": SensorStateClass.TOTAL_INCREASING,
+        "duplicate_count": SensorStateClass.TOTAL_INCREASING,
+        "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
+        "speed_rejections": SensorStateClass.TOTAL_INCREASING,
+    }

@@ -16,6 +16,7 @@ from custom_components.gps_filter.device_tracker import FilteredTracker
 class DummyEntry:
     def __init__(self, options=None) -> None:
         self.entry_id = "entry-1"
+        self.title = "GPS Filter - Test Tracker"
         self.data = {
             "source": "device_tracker.test",
             "max_speed": 220.0,
@@ -271,6 +272,18 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     assert attributes["last_reported_speed_kmh"] == 10.0
     assert attributes["last_received_accuracy"] is None
     assert attributes["last_received_timestamp"] is None
+
+
+def test_filtered_tracker_uses_entry_specific_device_info():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+    tracker = FilteredTracker(coordinator)
+
+    assert tracker.device_info == {
+        "identifiers": {("gps_filter", "entry-1")},
+        "name": "GPS Filter - Test Tracker",
+        "manufacturer": "GPS Filter",
+        "model": "Filtered Tracker",
+    }
 
 
 def test_coordinator_reset_statistics_and_filter_state():

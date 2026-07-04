@@ -8,6 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GPSFilterCoordinator
+from .helpers import get_device_name
 
 
 class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
@@ -19,6 +20,12 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
     def __init__(self, coordinator: GPSFilterCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.entry.entry_id + "_filtered"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, coordinator.entry.entry_id)},
+            "name": get_device_name(coordinator.entry),
+            "manufacturer": "GPS Filter",
+            "model": "Filtered Tracker",
+        }
 
     @property
     def latitude(self):
