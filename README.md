@@ -14,6 +14,7 @@ collected.
 - Options flow for tuning thresholds after setup
 - Coordinator-based runtime state
 - Filtered GPS `device_tracker`
+- Device-scoped reset buttons
 - Diagnostic sensor platform for dashboards using Home Assistant entity
   descriptions
 - Config entry diagnostics
@@ -39,6 +40,15 @@ speed is converted from m/s to km/h when present.
 - `device_tracker.filtered`
 
 The filtered tracker exposes the most recent accepted GPS position.
+
+### Reset Buttons
+
+- Reset Filter
+- Reset Stats
+
+The reset buttons are tied to one GPS Filter device. Use these for dashboard
+controls when multiple filtered trackers are configured. Home Assistant derives
+the exact entity IDs from the configured GPS Filter device name.
 
 ### Diagnostic Sensors
 
@@ -131,6 +141,10 @@ The integration exposes two services:
 
 Both services accept an optional `entry_id` field. If omitted, all loaded GPS
 Filter entries are reset. If provided, only that config entry is reset.
+
+For dashboard controls, prefer the GPS Filter button entities instead of calling
+these services directly. Button entities are tied to one GPS Filter device, so
+pressing one only resets that filtered tracker.
 
 ## Diagnostics
 

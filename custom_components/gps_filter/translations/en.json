@@ -26,6 +26,14 @@
     }
   },
   "entity": {
+    "button": {
+      "reset_filter": {
+        "name": "Reset Filter"
+      },
+      "reset_statistics": {
+        "name": "Reset Stats"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status"
