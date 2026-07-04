@@ -103,6 +103,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             longitude=longitude,
             accuracy=accuracy,
             timestamp=state.last_updated,
+            speed=speed,
         )
 
         _LOGGER.info(
@@ -125,13 +126,22 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         if result.accepted:
             _LOGGER.info(
-                "Accepted (%s)",
-                result.reason,
+                "Accepted: distance=%s m calculated_speed=%s km/h "
+                "reported_speed=%s km/h accuracy=%.1f",
+                result.distance_m,
+                result.calculated_speed_kmh,
+                result.reported_speed_kmh,
+                accuracy,
             )
         else:
             _LOGGER.info(
-                "Rejected (%s)",
+                "Rejected: reason=%s distance=%s m calculated_speed=%s km/h "
+                "reported_speed=%s km/h accuracy=%.1f",
                 result.reason,
+                result.distance_m,
+                result.calculated_speed_kmh,
+                result.reported_speed_kmh,
+                accuracy,
             )
 
     async def async_stop(self) -> None:

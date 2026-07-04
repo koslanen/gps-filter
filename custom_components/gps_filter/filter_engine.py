@@ -65,7 +65,7 @@ class GPSFilterEngine:
 
             return FilterResult(
                 accepted=True,
-                reason=None,
+                reason="",
                 point=point,
             )
 
@@ -81,32 +81,51 @@ class GPSFilterEngine:
         if seconds <= 0:
             seconds = 1
 
-        speed = distance / seconds * 3.6
+        calculated_speed_kmh = distance / seconds * 3.6
+        reported_speed_kmh = (
+            point.speed * 3.6 if point.speed is not None else None
+        )
+
+        if (
+            point.latitude == self._last_point.latitude
+            and point.longitude == self._last_point.longitude
+        ):
+            return FilterResult(
+                accepted=False,
+                reason="duplicate",
+                point=None,
+                distance_m=0.0,
+                calculated_speed_kmh=0.0,
+                reported_speed_kmh=reported_speed_kmh,
+            )
 
         if distance > self._max_jump:
             return FilterResult(
                 accepted=False,
                 reason="jump",
                 point=None,
-                calculated_speed=speed,
-                jump_distance=distance,
+                distance_m=distance,
+                calculated_speed_kmh=calculated_speed_kmh,
+                reported_speed_kmh=reported_speed_kmh,
             )
 
-        if speed > self._max_speed:
+        if calculated_speed_kmh > self._max_speed:
             return FilterResult(
                 accepted=False,
                 reason="speed",
                 point=None,
-                calculated_speed=speed,
-                jump_distance=distance,
+                distance_m=distance,
+                calculated_speed_kmh=calculated_speed_kmh,
+                reported_speed_kmh=reported_speed_kmh,
             )
 
         self._last_point = point
 
         return FilterResult(
             accepted=True,
-            reason=None,
+            reason="",
             point=point,
-            calculated_speed=speed,
-            jump_distance=distance,
+            distance_m=distance,
+            calculated_speed_kmh=calculated_speed_kmh,
+            reported_speed_kmh=reported_speed_kmh,
         )

@@ -23,10 +23,11 @@ class FilterResult:
     """Result of processing a GPS point."""
 
     accepted: bool
-    reason: str | None
-    point: GPSPoint | None
-    calculated_speed: float | None = None
-    jump_distance: float | None = None
+    reason: str = ""
+    point: GPSPoint | None = None
+    distance_m: float | None = None
+    calculated_speed_kmh: float | None = None
+    reported_speed_kmh: float | None = None
 
 
 @dataclass(slots=True)
