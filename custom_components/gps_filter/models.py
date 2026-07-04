@@ -30,6 +30,15 @@ class FilterResult:
 
 
 @dataclass(slots=True)
+class CoordinatorData:
+    """Structured snapshot of coordinator state."""
+
+    last_received_point: GPSPoint | None = None
+    last_accepted_point: GPSPoint | None = None
+    last_result: FilterResult | None = None
+
+
+@dataclass(slots=True)
 class FilterConfig:
     """Filter configuration."""
 

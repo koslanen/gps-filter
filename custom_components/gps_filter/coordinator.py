@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -11,12 +10,12 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .filter_engine import GPSFilterEngine
-from .models import GPSPoint
+from .models import CoordinatorData, FilterResult, GPSPoint
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class GPSFilterCoordinator(DataUpdateCoordinator[dict]):
+class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """GPS Filter coordinator."""
 
     def __init__(
@@ -36,11 +35,36 @@ class GPSFilterCoordinator(DataUpdateCoordinator[dict]):
         self.source_entity = entry.data["source"]
 
         self.engine = GPSFilterEngine(
-            max_speed_kmh=entry.data["max_speed"],
+            max_speed=entry.data["max_speed"],
             max_accuracy=entry.data["max_accuracy"],
         )
 
         self._remove_listener = None
+        self.data = CoordinatorData()
+
+    @property
+    def current_point(self) -> GPSPoint | None:
+        """Return the last accepted point."""
+
+        return self.last_accepted_point
+
+    @property
+    def last_received_point(self) -> GPSPoint | None:
+        """Return the most recently received point."""
+
+        return self.data.last_received_point
+
+    @property
+    def last_accepted_point(self) -> GPSPoint | None:
+        """Return the most recently accepted point."""
+
+        return self.data.last_accepted_point
+
+    @property
+    def last_result(self) -> FilterResult | None:
+        """Return the most recent filter result."""
+
+        return self.data.last_result
 
     async def async_start(self) -> None:
         """Start listening for GPS updates."""
@@ -78,7 +102,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[dict]):
             latitude=latitude,
             longitude=longitude,
             accuracy=accuracy,
-            timestamp=datetime.now(),
+            timestamp=state.last_updated,
         )
 
         _LOGGER.info(
@@ -91,19 +115,19 @@ class GPSFilterCoordinator(DataUpdateCoordinator[dict]):
 
         result = self.engine.process(point)
 
+        new_data = CoordinatorData(
+            last_received_point=point,
+            last_accepted_point=point if result.accepted else self.last_accepted_point,
+            last_result=result,
+        )
+
+        self.async_set_updated_data(new_data)
+
         if result.accepted:
             _LOGGER.info(
                 "Accepted (%s)",
                 result.reason,
             )
-
-            self.data = {
-                **state.attributes,
-                "speed_kmh": round(speed * 3.6, 1),
-            }
-
-            self.async_update_listeners()
-
         else:
             _LOGGER.info(
                 "Rejected (%s)",

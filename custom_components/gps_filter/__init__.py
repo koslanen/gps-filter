@@ -51,9 +51,7 @@ async def async_unload_entry(
     )
 
     if unload_ok:
-        coordinator: GPSFilterCoordinator = hass.data[DOMAIN].pop(
-            entry.entry_id
-        )
+        coordinator: GPSFilterCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.async_stop()
 
     return unload_ok
