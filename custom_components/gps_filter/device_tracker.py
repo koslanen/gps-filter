@@ -52,6 +52,14 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
         attributes["accuracy_rejections"] = stats.accuracy_rejections
         attributes["speed_rejections"] = stats.speed_rejections
 
+        attributes["last_received_accuracy"] = None
+        attributes["last_received_timestamp"] = None
+        attributes["last_result_reason"] = None
+        attributes["last_result_accepted"] = None
+        attributes["last_distance_m"] = None
+        attributes["last_calculated_speed_kmh"] = None
+        attributes["last_reported_speed_kmh"] = None
+
         if self.coordinator.last_received_point is not None:
             attributes["last_received_accuracy"] = (
                 self.coordinator.last_received_point.accuracy
@@ -67,13 +75,18 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
 
         if self.coordinator.last_result is not None:
             attributes["last_result_reason"] = self.coordinator.last_result.reason
+            attributes["last_result_accepted"] = getattr(
+                self.coordinator.last_result,
+                "accepted",
+                None,
+            )
+            attributes["last_distance_m"] = self.coordinator.last_result.distance_m
             attributes["last_calculated_speed_kmh"] = (
                 self.coordinator.last_result.calculated_speed_kmh
             )
             attributes["last_reported_speed_kmh"] = (
                 self.coordinator.last_result.reported_speed_kmh
             )
-            attributes["last_distance_m"] = self.coordinator.last_result.distance_m
 
         return attributes
 

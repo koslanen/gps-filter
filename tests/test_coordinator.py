@@ -82,6 +82,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
         "Result",
         (),
         {
+            "accepted": True,
             "reason": "accepted",
             "calculated_speed_kmh": 12.5,
             "reported_speed_kmh": 10.0,
@@ -96,9 +97,12 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     assert attributes["accuracy_rejections"] == 3
     assert attributes["speed_rejections"] == 4
     assert attributes["last_result_reason"] == "accepted"
+    assert attributes["last_result_accepted"] is True
+    assert attributes["last_distance_m"] == 42.0
     assert attributes["last_calculated_speed_kmh"] == 12.5
     assert attributes["last_reported_speed_kmh"] == 10.0
-    assert attributes["last_distance_m"] == 42.0
+    assert attributes["last_received_accuracy"] is None
+    assert attributes["last_received_timestamp"] is None
 
 
 def test_coordinator_reset_statistics_and_filter_state():

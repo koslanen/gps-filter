@@ -11,4 +11,4 @@ CONF_MAX_ACCURACY: Final = "max_accuracy"
 DEFAULT_MAX_SPEED: Final = 220.0
 DEFAULT_MAX_ACCURACY: Final = 30.0
 
-PLATFORMS: Final = ["device_tracker"]
+PLATFORMS: Final = ["device_tracker", "sensor"]
