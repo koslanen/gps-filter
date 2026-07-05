@@ -124,6 +124,16 @@ def _serialize_summary(coordinator: Any, stats: Any) -> dict[str, Any]:
             "max_rejected_accuracy_m",
             0.0,
         ),
+        "max_gap_distance_m": getattr(
+            summary_stats,
+            "max_gap_distance_m",
+            0.0,
+        ),
+        "max_gap_seconds_since_last_accepted": getattr(
+            summary_stats,
+            "max_gap_seconds_since_last_accepted",
+            0.0,
+        ),
     }
 
 

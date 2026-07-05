@@ -308,6 +308,27 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         ),
     ),
     GPSFilterSensorEntityDescription(
+        key="max_gap_distance",
+        translation_key="max_gap_distance",
+        icon="mdi:map-marker-path",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        value_fn=lambda coordinator: (
+            _rounded(coordinator.summary_stats.max_gap_distance_m)
+        ),
+    ),
+    GPSFilterSensorEntityDescription(
+        key="max_gap_seconds_since_last_accepted",
+        translation_key="max_gap_seconds_since_last_accepted",
+        icon="mdi:timer-outline",
+        value_fn=lambda coordinator: (
+            _rounded(
+                coordinator.summary_stats.max_gap_seconds_since_last_accepted,
+                1,
+            )
+        ),
+    ),
+    GPSFilterSensorEntityDescription(
         key="accepted_count",
         translation_key="accepted_count",
         icon="mdi:check-circle-outline",

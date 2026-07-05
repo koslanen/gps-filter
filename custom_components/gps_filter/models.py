@@ -73,6 +73,8 @@ class SummaryStats:
     max_rejected_calculated_speed_kmh: float = 0.0
     max_rejected_reported_speed_kmh: float = 0.0
     max_rejected_accuracy_m: float = 0.0
+    max_gap_distance_m: float = 0.0
+    max_gap_seconds_since_last_accepted: float = 0.0
 
 
 @dataclass(slots=True)

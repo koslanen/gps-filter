@@ -77,6 +77,8 @@ def test_diagnostics_report_contains_expected_fields():
     coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
     coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
     coordinator.summary_stats.max_rejected_accuracy_m = 98.0
+    coordinator.summary_stats.max_gap_distance_m = 200.0
+    coordinator.summary_stats.max_gap_seconds_since_last_accepted = 130.5
 
     hass = SimpleNamespace(data={"gps_filter": {"entry-1": coordinator}})
     entry = DummyEntry()
@@ -116,6 +118,8 @@ def test_diagnostics_report_contains_expected_fields():
         "max_rejected_calculated_speed_kmh": 300.0,
         "max_rejected_reported_speed_kmh": 97.2,
         "max_rejected_accuracy_m": 98.0,
+        "max_gap_distance_m": 200.0,
+        "max_gap_seconds_since_last_accepted": 130.5,
     }
     assert result["last_received_point"]["latitude"] == 60.0
     assert result["last_accepted_point"]["latitude"] == 60.0
@@ -218,6 +222,8 @@ def test_diagnostics_report_contains_filter_timeline():
     assert result["summary"]["acceptance_rate_percent"] == 50.0
     assert result["summary"]["max_accuracy_m"] == 5.0
     assert result["summary"]["max_rejected_accuracy_m"] == 5.0
+    assert result["summary"]["max_gap_distance_m"] == 0.0
+    assert result["summary"]["max_gap_seconds_since_last_accepted"] == 0.0
 
 
 def test_manifest_version_matches_const_version():

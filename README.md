@@ -79,6 +79,8 @@ the exact entity IDs from the configured GPS Filter device name.
 - `sensor.gps_filter_max_rejected_calculated_speed`
 - `sensor.gps_filter_max_rejected_reported_speed`
 - `sensor.gps_filter_max_rejected_accuracy`
+- `sensor.gps_filter_max_gap_distance`
+- `sensor.gps_filter_max_gap_seconds_since_last_accepted`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -119,6 +121,8 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_max_rejected_calculated_speed`
 - `sensor.gps_filter_max_rejected_reported_speed`
 - `sensor.gps_filter_max_rejected_accuracy`
+- `sensor.gps_filter_max_gap_distance`
+- `sensor.gps_filter_max_gap_seconds_since_last_accepted`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
@@ -230,6 +234,8 @@ The diagnostics summary includes:
 - max_rejected_calculated_speed_kmh
 - max_rejected_reported_speed_kmh
 - max_rejected_accuracy_m
+- max_gap_distance_m
+- max_gap_seconds_since_last_accepted
 
 Summary statistics are in-memory only. They reset when
 `gps_filter.reset_statistics` or `gps_filter.reset_filter` is called.

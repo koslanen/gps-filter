@@ -290,6 +290,21 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
             return
 
+        if result.reason == "gap_accepted":
+            if result.distance_m is not None:
+                self.summary_stats.max_gap_distance_m = max(
+                    self.summary_stats.max_gap_distance_m,
+                    result.distance_m,
+                )
+
+            if result.seconds_since_last_accepted is not None:
+                self.summary_stats.max_gap_seconds_since_last_accepted = max(
+                    self.summary_stats.max_gap_seconds_since_last_accepted,
+                    result.seconds_since_last_accepted,
+                )
+
+            return
+
         self.summary_stats.max_accuracy_m = max(
             self.summary_stats.max_accuracy_m,
             point.accuracy,

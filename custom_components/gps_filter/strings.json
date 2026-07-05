@@ -108,6 +108,12 @@
       "max_rejected_accuracy": {
         "name": "Max Rejected Accuracy"
       },
+      "max_gap_distance": {
+        "name": "Max Gap Distance"
+      },
+      "max_gap_seconds_since_last_accepted": {
+        "name": "Max Gap Seconds Since Last Accepted"
+      },
       "accepted_count": {
         "name": "Accepted Count"
       },

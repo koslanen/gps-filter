@@ -349,6 +349,54 @@ def test_rejected_points_do_not_update_summary_max_values():
     assert coordinator.summary_stats.max_rejected_distance_m > 100.0
 
 
+def test_gap_accepted_points_update_only_gap_summary_max_values():
+    coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
+
+    states = [
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.0,
+                "gps_accuracy": 5.0,
+                "speed": 0.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.0001,
+                "gps_accuracy": 6.0,
+                "speed": 1.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 0, 10, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.1,
+                "longitude": 25.1,
+                "gps_accuracy": 1.0,
+                "speed": 0.0,
+            },
+            last_updated=datetime(2024, 1, 1, 2, 0, 0, tzinfo=UTC),
+        ),
+    ]
+
+    for state in states:
+        coordinator._state_changed(SimpleNamespace(data={"new_state": state}))
+
+    assert coordinator.last_result is not None
+    assert coordinator.last_result.reason == "gap_accepted"
+    assert coordinator.data.engine_stats.accepted == 3
+    assert coordinator.data.engine_stats.gap_accepted == 1
+    assert coordinator.summary_stats.max_distance_m < 10.0
+    assert coordinator.summary_stats.max_calculated_speed_kmh < 10.0
+    assert coordinator.summary_stats.max_reported_speed_kmh == 3.6
+    assert coordinator.summary_stats.max_accuracy_m == 6.0
+    assert coordinator.summary_stats.max_gap_distance_m > 1000.0
+    assert coordinator.summary_stats.max_gap_seconds_since_last_accepted == 7190.0
+
+
 def test_reset_filter_clears_filter_timeline():
     coordinator = GPSFilterCoordinator(hass=Mock(), entry=DummyEntry())
     state = SimpleNamespace(
@@ -442,6 +490,8 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
     coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
     coordinator.summary_stats.max_rejected_accuracy_m = 98.0
+    coordinator.summary_stats.max_gap_distance_m = 200.0
+    coordinator.summary_stats.max_gap_seconds_since_last_accepted = 130.0
 
     coordinator.reset_statistics()
 
@@ -463,6 +513,8 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.summary_stats.max_rejected_calculated_speed_kmh == 0.0
     assert coordinator.summary_stats.max_rejected_reported_speed_kmh == 0.0
     assert coordinator.summary_stats.max_rejected_accuracy_m == 0.0
+    assert coordinator.summary_stats.max_gap_distance_m == 0.0
+    assert coordinator.summary_stats.max_gap_seconds_since_last_accepted == 0.0
 
     coordinator.summary_stats.total_received_count = 2
     coordinator.summary_stats.max_distance_m = 24.0
@@ -473,6 +525,8 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
     coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
     coordinator.summary_stats.max_rejected_accuracy_m = 98.0
+    coordinator.summary_stats.max_gap_distance_m = 200.0
+    coordinator.summary_stats.max_gap_seconds_since_last_accepted = 130.0
 
     coordinator.reset_filter()
 
@@ -496,3 +550,5 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.summary_stats.max_rejected_calculated_speed_kmh == 0.0
     assert coordinator.summary_stats.max_rejected_reported_speed_kmh == 0.0
     assert coordinator.summary_stats.max_rejected_accuracy_m == 0.0
+    assert coordinator.summary_stats.max_gap_distance_m == 0.0
+    assert coordinator.summary_stats.max_gap_seconds_since_last_accepted == 0.0
