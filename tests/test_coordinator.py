@@ -441,18 +441,15 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
 
     attributes = tracker.extra_state_attributes
 
-    assert attributes["accepted_count"] == 2
-    assert attributes["duplicate_count"] == 1
-    assert attributes["accuracy_rejections"] == 3
-    assert attributes["startup_accuracy_rejections"] == 6
-    assert attributes["speed_rejections"] == 4
-    assert attributes["speed_consistency_rejections"] == 5
-    assert attributes["gap_accepted_count"] == 6
+    assert set(attributes) == {
+        "last_received_accuracy",
+        "last_received_timestamp",
+        "last_accepted_accuracy",
+        "last_result_reason",
+        "last_result_accepted",
+    }
     assert attributes["last_result_reason"] == "accepted"
     assert attributes["last_result_accepted"] is True
-    assert attributes["last_distance_m"] == 42.0
-    assert attributes["last_calculated_speed_kmh"] == 12.5
-    assert attributes["last_reported_speed_kmh"] == 10.0
     assert attributes["last_received_accuracy"] is None
     assert attributes["last_received_timestamp"] is None
 

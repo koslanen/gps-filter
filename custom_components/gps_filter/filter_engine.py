@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from math import asin, cos, radians, sin, sqrt
 
-from .const import DEFAULT_STARTUP_MAX_ACCURACY
+from .const import DEFAULT_STARTUP_MAX_ACCURACY, GAP_ACCEPTED_SECONDS
 from .models import EngineStats, FilterResult, GPSPoint
 
 EARTH_RADIUS = 6371000.0
-GAP_ACCEPTED_SECONDS = 120.0
 
 
 def haversine(

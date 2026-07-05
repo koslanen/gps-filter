@@ -16,38 +16,14 @@ from custom_components.gps_filter.sensor import SENSOR_DESCRIPTIONS, GPSFilterSe
 
 EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_status",
-    "sensor.gps_filter_distance",
-    "sensor.gps_filter_calculated_speed",
-    "sensor.gps_filter_reported_speed",
     "sensor.gps_filter_last_reason",
     "sensor.gps_filter_last_accuracy",
     "sensor.gps_filter_last_received_timestamp",
     "sensor.gps_filter_last_accepted_timestamp",
     "sensor.gps_filter_acceptance_rate",
     "sensor.gps_filter_seconds_since_last_accepted",
-    "sensor.gps_filter_max_speed_threshold",
-    "sensor.gps_filter_max_speed_difference_threshold",
-    "sensor.gps_filter_max_accuracy_threshold",
-    "sensor.gps_filter_startup_accuracy_threshold",
     "sensor.gps_filter_total_received_count",
     "sensor.gps_filter_total_rejected_count",
-    "sensor.gps_filter_max_distance",
-    "sensor.gps_filter_max_calculated_speed",
-    "sensor.gps_filter_max_reported_speed",
-    "sensor.gps_filter_max_accuracy",
-    "sensor.gps_filter_max_rejected_distance",
-    "sensor.gps_filter_max_rejected_calculated_speed",
-    "sensor.gps_filter_max_rejected_reported_speed",
-    "sensor.gps_filter_max_rejected_accuracy",
-    "sensor.gps_filter_max_gap_distance",
-    "sensor.gps_filter_max_gap_seconds_since_last_accepted",
-    "sensor.gps_filter_accepted_count",
-    "sensor.gps_filter_duplicate_count",
-    "sensor.gps_filter_accuracy_rejections",
-    "sensor.gps_filter_startup_accuracy_rejections",
-    "sensor.gps_filter_speed_rejections",
-    "sensor.gps_filter_speed_consistency_rejections",
-    "sensor.gps_filter_gap_accepted_count",
 ]
 
 
@@ -124,9 +100,6 @@ def test_sensor_entities_expose_coordinator_state():
     sensors = _make_sensors(coordinator)
 
     assert sensors["status"].native_value == "accepted"
-    assert sensors["distance"].native_value == 42.0
-    assert sensors["calculated_speed"].native_value == 12.5
-    assert sensors["reported_speed"].native_value == 10.0
     assert sensors["last_reason"].native_value == "accepted"
     assert sensors["last_accuracy"].native_value == 5.0
     assert sensors["last_received_timestamp"].native_value == datetime(
@@ -146,29 +119,8 @@ def test_sensor_entities_expose_coordinator_state():
     )
     assert sensors["acceptance_rate"].native_value == 50.0
     assert sensors["seconds_since_last_accepted"].native_value == 5.0
-    assert sensors["max_speed_threshold"].native_value == 220.0
-    assert sensors["max_speed_difference_threshold"].native_value == 40.0
-    assert sensors["max_accuracy_threshold"].native_value == 30.0
-    assert sensors["startup_accuracy_threshold"].native_value == 10.0
     assert sensors["total_received_count"].native_value == 4
     assert sensors["total_rejected_count"].native_value == 19
-    assert sensors["max_distance"].native_value == 88.0
-    assert sensors["max_calculated_speed"].native_value == 40.0
-    assert sensors["max_reported_speed"].native_value == 36.0
-    assert sensors["max_accuracy"].native_value == 25.0
-    assert sensors["max_rejected_distance"].native_value == 100.0
-    assert sensors["max_rejected_calculated_speed"].native_value == 300.0
-    assert sensors["max_rejected_reported_speed"].native_value == 97.2
-    assert sensors["max_rejected_accuracy"].native_value == 98.0
-    assert sensors["max_gap_distance"].native_value == 200.0
-    assert sensors["max_gap_seconds_since_last_accepted"].native_value == 130.5
-    assert sensors["accepted_count"].native_value == 2
-    assert sensors["duplicate_count"].native_value == 1
-    assert sensors["accuracy_rejections"].native_value == 3
-    assert sensors["startup_accuracy_rejections"].native_value == 6
-    assert sensors["speed_rejections"].native_value == 4
-    assert sensors["speed_consistency_rejections"].native_value == 5
-    assert sensors["gap_accepted_count"].native_value == 6
 
 
 def test_sensor_entities_default_to_valid_dashboard_states():
@@ -178,38 +130,14 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     sensors = _make_sensors(coordinator)
 
     assert sensors["status"].native_value == "unknown"
-    assert sensors["distance"].native_value == 0.0
-    assert sensors["calculated_speed"].native_value == 0.0
-    assert sensors["reported_speed"].native_value == 0.0
     assert sensors["last_reason"].native_value == "unknown"
     assert sensors["last_accuracy"].native_value == 0.0
     assert sensors["last_received_timestamp"].native_value is None
     assert sensors["last_accepted_timestamp"].native_value is None
     assert sensors["acceptance_rate"].native_value == 0.0
     assert sensors["seconds_since_last_accepted"].native_value == 0.0
-    assert sensors["max_speed_threshold"].native_value == 220.0
-    assert sensors["max_speed_difference_threshold"].native_value == 40.0
-    assert sensors["max_accuracy_threshold"].native_value == 30.0
-    assert sensors["startup_accuracy_threshold"].native_value == 10.0
     assert sensors["total_received_count"].native_value == 0
     assert sensors["total_rejected_count"].native_value == 0
-    assert sensors["max_distance"].native_value == 0.0
-    assert sensors["max_calculated_speed"].native_value == 0.0
-    assert sensors["max_reported_speed"].native_value == 0.0
-    assert sensors["max_accuracy"].native_value == 0.0
-    assert sensors["max_rejected_distance"].native_value == 0.0
-    assert sensors["max_rejected_calculated_speed"].native_value == 0.0
-    assert sensors["max_rejected_reported_speed"].native_value == 0.0
-    assert sensors["max_rejected_accuracy"].native_value == 0.0
-    assert sensors["max_gap_distance"].native_value == 0.0
-    assert sensors["max_gap_seconds_since_last_accepted"].native_value == 0.0
-    assert sensors["accepted_count"].native_value == 0
-    assert sensors["duplicate_count"].native_value == 0
-    assert sensors["accuracy_rejections"].native_value == 0
-    assert sensors["startup_accuracy_rejections"].native_value == 0
-    assert sensors["speed_rejections"].native_value == 0
-    assert sensors["speed_consistency_rejections"].native_value == 0
-    assert sensors["gap_accepted_count"].native_value == 0
 
 
 def test_sensor_descriptions_follow_home_assistant_entity_id_conventions():
@@ -255,36 +183,12 @@ def test_only_counter_sensors_compile_long_term_statistics():
 
     assert state_classes == {
         "status": None,
-        "distance": None,
-        "calculated_speed": None,
-        "reported_speed": None,
         "last_reason": None,
         "last_accuracy": None,
         "last_received_timestamp": None,
         "last_accepted_timestamp": None,
         "acceptance_rate": None,
         "seconds_since_last_accepted": None,
-        "max_speed_threshold": None,
-        "max_speed_difference_threshold": None,
-        "max_accuracy_threshold": None,
-        "startup_accuracy_threshold": None,
         "total_received_count": SensorStateClass.TOTAL_INCREASING,
         "total_rejected_count": SensorStateClass.TOTAL_INCREASING,
-        "max_distance": None,
-        "max_calculated_speed": None,
-        "max_reported_speed": None,
-        "max_accuracy": None,
-        "max_rejected_distance": None,
-        "max_rejected_calculated_speed": None,
-        "max_rejected_reported_speed": None,
-        "max_rejected_accuracy": None,
-        "max_gap_distance": None,
-        "max_gap_seconds_since_last_accepted": None,
-        "accepted_count": SensorStateClass.TOTAL_INCREASING,
-        "duplicate_count": SensorStateClass.TOTAL_INCREASING,
-        "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
-        "startup_accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
-        "speed_rejections": SensorStateClass.TOTAL_INCREASING,
-        "speed_consistency_rejections": SensorStateClass.TOTAL_INCREASING,
-        "gap_accepted_count": SensorStateClass.TOTAL_INCREASING,
     }

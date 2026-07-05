@@ -91,6 +91,8 @@ def test_diagnostics_report_contains_expected_fields():
         "max_speed": 220.0,
         "max_accuracy": 30.0,
         "max_speed_difference_kmh": 40.0,
+        "startup_max_accuracy": 10.0,
+        "gap_accepted_seconds": 120.0,
     }
     assert result["accepted_count"] == 2
     assert result["duplicate_count"] == 1
@@ -155,6 +157,8 @@ def test_diagnostics_report_uses_effective_options():
         "max_speed": 120.0,
         "max_accuracy": 15.0,
         "max_speed_difference_kmh": 30.0,
+        "startup_max_accuracy": 10.0,
+        "gap_accepted_seconds": 120.0,
     }
 
 

@@ -39,15 +39,6 @@
       "status": {
         "name": "Status"
       },
-      "calculated_speed": {
-        "name": "Calculated Speed"
-      },
-      "reported_speed": {
-        "name": "Reported Speed"
-      },
-      "distance": {
-        "name": "Distance"
-      },
       "last_reason": {
         "name": "Last Reason"
       },
@@ -66,74 +57,11 @@
       "seconds_since_last_accepted": {
         "name": "Seconds Since Last Accepted"
       },
-      "max_speed_threshold": {
-        "name": "Max Speed Threshold"
-      },
-      "max_speed_difference_threshold": {
-        "name": "Max Speed Difference Threshold"
-      },
-      "max_accuracy_threshold": {
-        "name": "Max Accuracy Threshold"
-      },
-      "startup_accuracy_threshold": {
-        "name": "Startup Accuracy Threshold"
-      },
       "total_received_count": {
         "name": "Total Received Count"
       },
       "total_rejected_count": {
         "name": "Total Rejected Count"
-      },
-      "max_distance": {
-        "name": "Max Distance"
-      },
-      "max_calculated_speed": {
-        "name": "Max Calculated Speed"
-      },
-      "max_reported_speed": {
-        "name": "Max Reported Speed"
-      },
-      "max_accuracy": {
-        "name": "Max Accuracy"
-      },
-      "max_rejected_distance": {
-        "name": "Max Rejected Distance"
-      },
-      "max_rejected_calculated_speed": {
-        "name": "Max Rejected Calculated Speed"
-      },
-      "max_rejected_reported_speed": {
-        "name": "Max Rejected Reported Speed"
-      },
-      "max_rejected_accuracy": {
-        "name": "Max Rejected Accuracy"
-      },
-      "max_gap_distance": {
-        "name": "Max Gap Distance"
-      },
-      "max_gap_seconds_since_last_accepted": {
-        "name": "Max Gap Seconds Since Last Accepted"
-      },
-      "accepted_count": {
-        "name": "Accepted Count"
-      },
-      "duplicate_count": {
-        "name": "Duplicate Count"
-      },
-      "accuracy_rejections": {
-        "name": "Accuracy Rejections"
-      },
-      "startup_accuracy_rejections": {
-        "name": "Startup Accuracy Rejections"
-      },
-      "speed_rejections": {
-        "name": "Speed Rejections"
-      },
-      "speed_consistency_rejections": {
-        "name": "Speed Consistency Rejections"
-      },
-      "gap_accepted_count": {
-        "name": "Gap Accepted Count"
       }
     }
   },

@@ -13,20 +13,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfSpeed
+from homeassistant.const import PERCENTAGE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_MAX_ACCURACY,
-    CONF_MAX_SPEED,
-    CONF_MAX_SPEED_DIFFERENCE,
-    DEFAULT_STARTUP_MAX_ACCURACY,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import GPSFilterCoordinator
-from .helpers import get_config_value, get_device_name
+from .helpers import get_device_name
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,45 +75,6 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         translation_key="status",
         icon="mdi:filter-check",
         value_fn=_status_value,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="distance",
-        translation_key="distance",
-        icon="mdi:ruler",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: (
-            0.0
-            if coordinator.last_result is None
-            or coordinator.last_result.distance_m is None
-            else _rounded(coordinator.last_result.distance_m)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="calculated_speed",
-        translation_key="calculated_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            0.0
-            if coordinator.last_result is None
-            or coordinator.last_result.calculated_speed_kmh is None
-            else _rounded(coordinator.last_result.calculated_speed_kmh)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="reported_speed",
-        translation_key="reported_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            0.0
-            if coordinator.last_result is None
-            or coordinator.last_result.reported_speed_kmh is None
-            else _rounded(coordinator.last_result.reported_speed_kmh)
-        ),
     ),
     GPSFilterSensorEntityDescription(
         key="last_reason",
@@ -177,47 +132,6 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         ),
     ),
     GPSFilterSensorEntityDescription(
-        key="max_speed_threshold",
-        translation_key="max_speed_threshold",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: get_config_value(
-            coordinator.entry,
-            CONF_MAX_SPEED,
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_speed_difference_threshold",
-        translation_key="max_speed_difference_threshold",
-        icon="mdi:speedometer-medium",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: get_config_value(
-            coordinator.entry,
-            CONF_MAX_SPEED_DIFFERENCE,
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_accuracy_threshold",
-        translation_key="max_accuracy_threshold",
-        icon="mdi:crosshairs-gps",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: get_config_value(
-            coordinator.entry,
-            CONF_MAX_ACCURACY,
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="startup_accuracy_threshold",
-        translation_key="startup_accuracy_threshold",
-        icon="mdi:crosshairs-gps",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: DEFAULT_STARTUP_MAX_ACCURACY,
-    ),
-    GPSFilterSensorEntityDescription(
         key="total_received_count",
         translation_key="total_received_count",
         icon="mdi:counter",
@@ -230,156 +144,6 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda coordinator: coordinator.total_rejected_count,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_distance",
-        translation_key="max_distance",
-        icon="mdi:map-marker-distance",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: _rounded(coordinator.summary_stats.max_distance_m),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_calculated_speed",
-        translation_key="max_calculated_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_calculated_speed_kmh)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_reported_speed",
-        translation_key="max_reported_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_reported_speed_kmh)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_accuracy",
-        translation_key="max_accuracy",
-        icon="mdi:crosshairs-gps",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: _rounded(coordinator.summary_stats.max_accuracy_m),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_rejected_distance",
-        translation_key="max_rejected_distance",
-        icon="mdi:map-marker-distance",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_rejected_distance_m)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_rejected_calculated_speed",
-        translation_key="max_rejected_calculated_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_rejected_calculated_speed_kmh)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_rejected_reported_speed",
-        translation_key="max_rejected_reported_speed",
-        icon="mdi:speedometer",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_rejected_reported_speed_kmh)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_rejected_accuracy",
-        translation_key="max_rejected_accuracy",
-        icon="mdi:crosshairs-gps",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_rejected_accuracy_m)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_gap_distance",
-        translation_key="max_gap_distance",
-        icon="mdi:map-marker-path",
-        native_unit_of_measurement=UnitOfLength.METERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: (
-            _rounded(coordinator.summary_stats.max_gap_distance_m)
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="max_gap_seconds_since_last_accepted",
-        translation_key="max_gap_seconds_since_last_accepted",
-        icon="mdi:timer-outline",
-        value_fn=lambda coordinator: (
-            _rounded(
-                coordinator.summary_stats.max_gap_seconds_since_last_accepted,
-                1,
-            )
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="accepted_count",
-        translation_key="accepted_count",
-        icon="mdi:check-circle-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: coordinator.data.engine_stats.accepted,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="duplicate_count",
-        translation_key="duplicate_count",
-        icon="mdi:content-duplicate",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: coordinator.data.engine_stats.duplicate,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="accuracy_rejections",
-        translation_key="accuracy_rejections",
-        icon="mdi:alert-circle-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: coordinator.data.engine_stats.accuracy_rejections,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="startup_accuracy_rejections",
-        translation_key="startup_accuracy_rejections",
-        icon="mdi:alert-circle-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: (
-            coordinator.data.engine_stats.startup_accuracy_rejections
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="speed_rejections",
-        translation_key="speed_rejections",
-        icon="mdi:alert-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: coordinator.data.engine_stats.speed_rejections,
-    ),
-    GPSFilterSensorEntityDescription(
-        key="speed_consistency_rejections",
-        translation_key="speed_consistency_rejections",
-        icon="mdi:alert-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: (
-            coordinator.data.engine_stats.speed_consistency_rejections
-        ),
-    ),
-    GPSFilterSensorEntityDescription(
-        key="gap_accepted_count",
-        translation_key="gap_accepted_count",
-        icon="mdi:map-marker-path",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda coordinator: coordinator.data.engine_stats.gap_accepted,
     ),
 )
 

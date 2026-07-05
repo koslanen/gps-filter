@@ -11,6 +11,8 @@ from .const import (
     DEFAULT_MAX_ACCURACY,
     DEFAULT_MAX_SPEED,
     DEFAULT_MAX_SPEED_DIFFERENCE,
+    DEFAULT_STARTUP_MAX_ACCURACY,
+    GAP_ACCEPTED_SECONDS,
 )
 
 
@@ -50,4 +52,6 @@ def get_effective_filter_config(entry: ConfigEntry) -> dict[str, float]:
                 DEFAULT_MAX_SPEED_DIFFERENCE,
             ),
         ),
+        "startup_max_accuracy": DEFAULT_STARTUP_MAX_ACCURACY,
+        "gap_accepted_seconds": GAP_ACCEPTED_SECONDS,
     }

@@ -51,29 +51,13 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
 
     @property
     def extra_state_attributes(self):
-        attributes = {}
-
-        stats = self.coordinator.data.engine_stats
-        attributes["accepted_count"] = stats.accepted
-        attributes["duplicate_count"] = stats.duplicate
-        attributes["accuracy_rejections"] = stats.accuracy_rejections
-        attributes["startup_accuracy_rejections"] = (
-            stats.startup_accuracy_rejections
-        )
-        attributes["speed_rejections"] = stats.speed_rejections
-        attributes["speed_consistency_rejections"] = (
-            stats.speed_consistency_rejections
-        )
-        attributes["gap_accepted_count"] = stats.gap_accepted
-
-        attributes["last_received_accuracy"] = None
-        attributes["last_received_timestamp"] = None
-        attributes["last_result_reason"] = None
-        attributes["last_result_accepted"] = None
-        attributes["last_distance_m"] = None
-        attributes["last_calculated_speed_kmh"] = None
-        attributes["last_reported_speed_kmh"] = None
-        attributes["last_seconds_since_accepted"] = None
+        attributes = {
+            "last_received_accuracy": None,
+            "last_received_timestamp": None,
+            "last_accepted_accuracy": None,
+            "last_result_reason": None,
+            "last_result_accepted": None,
+        }
 
         if self.coordinator.last_received_point is not None:
             attributes["last_received_accuracy"] = (
@@ -94,20 +78,6 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
                 self.coordinator.last_result,
                 "accepted",
                 None,
-            )
-            attributes["last_distance_m"] = self.coordinator.last_result.distance_m
-            attributes["last_calculated_speed_kmh"] = (
-                self.coordinator.last_result.calculated_speed_kmh
-            )
-            attributes["last_reported_speed_kmh"] = (
-                self.coordinator.last_result.reported_speed_kmh
-            )
-            attributes["last_seconds_since_accepted"] = (
-                getattr(
-                    self.coordinator.last_result,
-                    "seconds_since_last_accepted",
-                    None,
-                )
             )
 
         return attributes
