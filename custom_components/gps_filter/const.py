@@ -13,5 +13,6 @@ CONF_MAX_SPEED_DIFFERENCE: Final = "max_speed_difference_kmh"
 DEFAULT_MAX_SPEED: Final = 220.0
 DEFAULT_MAX_ACCURACY: Final = 30.0
 DEFAULT_MAX_SPEED_DIFFERENCE: Final = 40.0
+DEFAULT_STARTUP_MAX_ACCURACY: Final = 10.0
 
 PLATFORMS: Final = ["button", "device_tracker", "sensor"]

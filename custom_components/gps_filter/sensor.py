@@ -18,7 +18,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED, CONF_MAX_SPEED_DIFFERENCE, DOMAIN
+from .const import (
+    CONF_MAX_ACCURACY,
+    CONF_MAX_SPEED,
+    CONF_MAX_SPEED_DIFFERENCE,
+    DEFAULT_STARTUP_MAX_ACCURACY,
+    DOMAIN,
+)
 from .coordinator import GPSFilterCoordinator
 from .helpers import get_config_value, get_device_name
 
@@ -204,6 +210,14 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         ),
     ),
     GPSFilterSensorEntityDescription(
+        key="startup_accuracy_threshold",
+        translation_key="startup_accuracy_threshold",
+        icon="mdi:crosshairs-gps",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        value_fn=lambda coordinator: DEFAULT_STARTUP_MAX_ACCURACY,
+    ),
+    GPSFilterSensorEntityDescription(
         key="total_received_count",
         translation_key="total_received_count",
         icon="mdi:counter",
@@ -313,6 +327,15 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:alert-circle-outline",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda coordinator: coordinator.data.engine_stats.accuracy_rejections,
+    ),
+    GPSFilterSensorEntityDescription(
+        key="startup_accuracy_rejections",
+        translation_key="startup_accuracy_rejections",
+        icon="mdi:alert-circle-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda coordinator: (
+            coordinator.data.engine_stats.startup_accuracy_rejections
+        ),
     ),
     GPSFilterSensorEntityDescription(
         key="speed_rejections",

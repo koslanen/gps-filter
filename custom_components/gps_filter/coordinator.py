@@ -113,6 +113,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         return (
             self.data.engine_stats.duplicate
             + self.data.engine_stats.accuracy_rejections
+            + self.data.engine_stats.startup_accuracy_rejections
             + self.data.engine_stats.speed_rejections
             + self.data.engine_stats.speed_consistency_rejections
         )

@@ -24,6 +24,36 @@ def test_first_point():
     assert result.reported_speed_kmh is None
 
 
+def test_first_point_requires_startup_accuracy():
+    engine = GPSFilterEngine(max_accuracy=30.0)
+
+    result = engine.process(
+        GPSPoint(
+            latitude=60,
+            longitude=25,
+            accuracy=23,
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+        )
+    )
+
+    assert not result.accepted
+    assert result.reason == "startup_accuracy"
+    assert engine.stats.startup_accuracy_rejections == 1
+    assert engine.stats.accepted == 0
+
+    accepted = engine.process(
+        GPSPoint(
+            latitude=60,
+            longitude=25,
+            accuracy=5,
+            timestamp=datetime(2024, 1, 1, 0, 0, 1, tzinfo=UTC),
+        )
+    )
+
+    assert accepted.accepted
+    assert accepted.reason == "first_point"
+
+
 def test_bad_accuracy():
     engine = GPSFilterEngine()
 
@@ -161,6 +191,7 @@ def test_engine_stats_track_decisions():
     assert engine.stats.accepted == 1
     assert engine.stats.duplicate == 1
     assert engine.stats.accuracy_rejections == 1
+    assert engine.stats.startup_accuracy_rejections == 0
     assert engine.stats.speed_rejections == 1
     assert engine.stats.speed_consistency_rejections == 0
     assert engine.stats.gap_accepted == 0

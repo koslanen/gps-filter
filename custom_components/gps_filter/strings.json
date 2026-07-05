@@ -75,6 +75,9 @@
       "max_accuracy_threshold": {
         "name": "Max Accuracy Threshold"
       },
+      "startup_accuracy_threshold": {
+        "name": "Startup Accuracy Threshold"
+      },
       "total_received_count": {
         "name": "Total Received Count"
       },
@@ -113,6 +116,9 @@
       },
       "accuracy_rejections": {
         "name": "Accuracy Rejections"
+      },
+      "startup_accuracy_rejections": {
+        "name": "Startup Accuracy Rejections"
       },
       "speed_rejections": {
         "name": "Speed Rejections"

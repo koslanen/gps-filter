@@ -31,6 +31,7 @@ The current filter accepts the first valid point, then rejects updates when:
 - The calculated movement speed exceeds the configured maximum speed
 - The calculated movement speed and reported source speed differ by more than
   the configured maximum speed difference
+- The first anchor after reset/restart has worse than 10 m GPS accuracy
 
 The integration tracks both calculated speed and reported source speed. Reported
 speed is converted from m/s to km/h when present.
@@ -67,6 +68,7 @@ the exact entity IDs from the configured GPS Filter device name.
 - `sensor.gps_filter_max_speed_threshold`
 - `sensor.gps_filter_max_speed_difference_threshold`
 - `sensor.gps_filter_max_accuracy_threshold`
+- `sensor.gps_filter_startup_accuracy_threshold`
 - `sensor.gps_filter_total_received_count`
 - `sensor.gps_filter_total_rejected_count`
 - `sensor.gps_filter_max_distance`
@@ -80,6 +82,7 @@ the exact entity IDs from the configured GPS Filter device name.
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
+- `sensor.gps_filter_startup_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
 - `sensor.gps_filter_speed_consistency_rejections`
 - `sensor.gps_filter_gap_accepted_count`
@@ -105,6 +108,7 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_max_speed_threshold`
 - `sensor.gps_filter_max_speed_difference_threshold`
 - `sensor.gps_filter_max_accuracy_threshold`
+- `sensor.gps_filter_startup_accuracy_threshold`
 - `sensor.gps_filter_total_received_count`
 - `sensor.gps_filter_total_rejected_count`
 - `sensor.gps_filter_max_distance`
@@ -118,6 +122,7 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
+- `sensor.gps_filter_startup_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
 - `sensor.gps_filter_speed_consistency_rejections`
 - `sensor.gps_filter_gap_accepted_count`
@@ -212,6 +217,7 @@ The diagnostics summary includes:
 - accepted_count
 - duplicate_count
 - accuracy_rejections
+- startup_accuracy_rejections
 - speed_rejections
 - speed_consistency_rejections
 - gap_accepted_count

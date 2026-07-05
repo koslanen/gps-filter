@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from math import asin, cos, radians, sin, sqrt
 
+from .const import DEFAULT_STARTUP_MAX_ACCURACY
 from .models import EngineStats, FilterResult, GPSPoint
 
 EARTH_RADIUS = 6371000.0
@@ -40,11 +41,13 @@ class GPSFilterEngine:
         max_speed: float = 220.0,
         max_accuracy: float = 30.0,
         max_speed_difference_kmh: float = 40.0,
+        startup_max_accuracy: float = DEFAULT_STARTUP_MAX_ACCURACY,
     ) -> None:
 
         self._max_speed = max_speed
         self._max_accuracy = max_accuracy
         self._max_speed_difference_kmh = max_speed_difference_kmh
+        self._startup_max_accuracy = startup_max_accuracy
 
         self._last_point: GPSPoint | None = None
         self.stats = EngineStats()
@@ -64,6 +67,14 @@ class GPSFilterEngine:
             )
 
         if self._last_point is None:
+            if point.accuracy > self._startup_max_accuracy:
+                self.stats.startup_accuracy_rejections += 1
+                return FilterResult(
+                    accepted=False,
+                    reason="startup_accuracy",
+                    point=None,
+                )
+
             self._last_point = point
             self.stats.accepted += 1
 

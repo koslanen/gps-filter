@@ -57,6 +57,9 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
         attributes["accepted_count"] = stats.accepted
         attributes["duplicate_count"] = stats.duplicate
         attributes["accuracy_rejections"] = stats.accuracy_rejections
+        attributes["startup_accuracy_rejections"] = (
+            stats.startup_accuracy_rejections
+        )
         attributes["speed_rejections"] = stats.speed_rejections
         attributes["speed_consistency_rejections"] = (
             stats.speed_consistency_rejections

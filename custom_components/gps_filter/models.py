@@ -56,6 +56,7 @@ class EngineStats:
     accuracy_rejections: int = 0
     speed_rejections: int = 0
     speed_consistency_rejections: int = 0
+    startup_accuracy_rejections: int = 0
     gap_accepted: int = 0
 
 

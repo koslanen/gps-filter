@@ -75,6 +75,11 @@ def _serialize_summary(coordinator: Any, stats: Any) -> dict[str, Any]:
         "accepted_count": getattr(stats, "accepted", 0),
         "duplicate_count": getattr(stats, "duplicate", 0),
         "accuracy_rejections": getattr(stats, "accuracy_rejections", 0),
+        "startup_accuracy_rejections": getattr(
+            stats,
+            "startup_accuracy_rejections",
+            0,
+        ),
         "speed_rejections": getattr(stats, "speed_rejections", 0),
         "speed_consistency_rejections": getattr(
             stats,
@@ -149,6 +154,7 @@ async def async_get_config_entry_diagnostics(
             "accepted_count": 0,
             "duplicate_count": 0,
             "accuracy_rejections": 0,
+            "startup_accuracy_rejections": 0,
             "speed_rejections": 0,
             "speed_consistency_rejections": 0,
             "gap_accepted_count": 0,
@@ -168,6 +174,11 @@ async def async_get_config_entry_diagnostics(
         "accepted_count": getattr(stats, "accepted", 0),
         "duplicate_count": getattr(stats, "duplicate", 0),
         "accuracy_rejections": getattr(stats, "accuracy_rejections", 0),
+        "startup_accuracy_rejections": getattr(
+            stats,
+            "startup_accuracy_rejections",
+            0,
+        ),
         "speed_rejections": getattr(stats, "speed_rejections", 0),
         "speed_consistency_rejections": getattr(
             stats,

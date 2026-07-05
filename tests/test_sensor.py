@@ -28,6 +28,7 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_max_speed_threshold",
     "sensor.gps_filter_max_speed_difference_threshold",
     "sensor.gps_filter_max_accuracy_threshold",
+    "sensor.gps_filter_startup_accuracy_threshold",
     "sensor.gps_filter_total_received_count",
     "sensor.gps_filter_total_rejected_count",
     "sensor.gps_filter_max_distance",
@@ -41,6 +42,7 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_accepted_count",
     "sensor.gps_filter_duplicate_count",
     "sensor.gps_filter_accuracy_rejections",
+    "sensor.gps_filter_startup_accuracy_rejections",
     "sensor.gps_filter_speed_rejections",
     "sensor.gps_filter_speed_consistency_rejections",
     "sensor.gps_filter_gap_accepted_count",
@@ -93,6 +95,7 @@ def test_sensor_entities_expose_coordinator_state():
             accepted=2,
             duplicate=1,
             accuracy_rejections=3,
+            startup_accuracy_rejections=6,
             speed_rejections=4,
             speed_consistency_rejections=5,
             gap_accepted=6,
@@ -142,8 +145,9 @@ def test_sensor_entities_expose_coordinator_state():
     assert sensors["max_speed_threshold"].native_value == 220.0
     assert sensors["max_speed_difference_threshold"].native_value == 40.0
     assert sensors["max_accuracy_threshold"].native_value == 30.0
+    assert sensors["startup_accuracy_threshold"].native_value == 10.0
     assert sensors["total_received_count"].native_value == 4
-    assert sensors["total_rejected_count"].native_value == 13
+    assert sensors["total_rejected_count"].native_value == 19
     assert sensors["max_distance"].native_value == 88.0
     assert sensors["max_calculated_speed"].native_value == 40.0
     assert sensors["max_reported_speed"].native_value == 36.0
@@ -155,6 +159,7 @@ def test_sensor_entities_expose_coordinator_state():
     assert sensors["accepted_count"].native_value == 2
     assert sensors["duplicate_count"].native_value == 1
     assert sensors["accuracy_rejections"].native_value == 3
+    assert sensors["startup_accuracy_rejections"].native_value == 6
     assert sensors["speed_rejections"].native_value == 4
     assert sensors["speed_consistency_rejections"].native_value == 5
     assert sensors["gap_accepted_count"].native_value == 6
@@ -179,6 +184,7 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["max_speed_threshold"].native_value == 220.0
     assert sensors["max_speed_difference_threshold"].native_value == 40.0
     assert sensors["max_accuracy_threshold"].native_value == 30.0
+    assert sensors["startup_accuracy_threshold"].native_value == 10.0
     assert sensors["total_received_count"].native_value == 0
     assert sensors["total_rejected_count"].native_value == 0
     assert sensors["max_distance"].native_value == 0.0
@@ -192,6 +198,7 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["accepted_count"].native_value == 0
     assert sensors["duplicate_count"].native_value == 0
     assert sensors["accuracy_rejections"].native_value == 0
+    assert sensors["startup_accuracy_rejections"].native_value == 0
     assert sensors["speed_rejections"].native_value == 0
     assert sensors["speed_consistency_rejections"].native_value == 0
     assert sensors["gap_accepted_count"].native_value == 0
@@ -252,6 +259,7 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "max_speed_threshold": None,
         "max_speed_difference_threshold": None,
         "max_accuracy_threshold": None,
+        "startup_accuracy_threshold": None,
         "total_received_count": SensorStateClass.TOTAL_INCREASING,
         "total_rejected_count": SensorStateClass.TOTAL_INCREASING,
         "max_distance": None,
@@ -265,6 +273,7 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "accepted_count": SensorStateClass.TOTAL_INCREASING,
         "duplicate_count": SensorStateClass.TOTAL_INCREASING,
         "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
+        "startup_accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
         "speed_rejections": SensorStateClass.TOTAL_INCREASING,
         "speed_consistency_rejections": SensorStateClass.TOTAL_INCREASING,
         "gap_accepted_count": SensorStateClass.TOTAL_INCREASING,

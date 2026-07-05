@@ -272,6 +272,7 @@ def test_coordinator_tracks_post_drive_summary_statistics():
     assert coordinator.data.engine_stats.accepted == 2
     assert coordinator.data.engine_stats.duplicate == 1
     assert coordinator.data.engine_stats.accuracy_rejections == 1
+    assert coordinator.data.engine_stats.startup_accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.data.engine_stats.gap_accepted == 0
@@ -373,6 +374,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     coordinator.data.engine_stats.accepted = 2
     coordinator.data.engine_stats.duplicate = 1
     coordinator.data.engine_stats.accuracy_rejections = 3
+    coordinator.data.engine_stats.startup_accuracy_rejections = 6
     coordinator.data.engine_stats.speed_rejections = 4
     coordinator.data.engine_stats.speed_consistency_rejections = 5
     coordinator.data.engine_stats.gap_accepted = 6
@@ -394,6 +396,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     assert attributes["accepted_count"] == 2
     assert attributes["duplicate_count"] == 1
     assert attributes["accuracy_rejections"] == 3
+    assert attributes["startup_accuracy_rejections"] == 6
     assert attributes["speed_rejections"] == 4
     assert attributes["speed_consistency_rejections"] == 5
     assert attributes["gap_accepted_count"] == 6
@@ -426,6 +429,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.data.engine_stats.accepted = 1
     coordinator.data.engine_stats.duplicate = 1
     coordinator.data.engine_stats.accuracy_rejections = 1
+    coordinator.data.engine_stats.startup_accuracy_rejections = 1
     coordinator.data.engine_stats.speed_rejections = 1
     coordinator.data.engine_stats.speed_consistency_rejections = 1
     coordinator.data.engine_stats.gap_accepted = 1
@@ -444,6 +448,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.accepted == 0
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
+    assert coordinator.data.engine_stats.startup_accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.data.engine_stats.gap_accepted == 0
@@ -477,6 +482,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.accepted == 0
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
+    assert coordinator.data.engine_stats.startup_accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.data.engine_stats.gap_accepted == 0

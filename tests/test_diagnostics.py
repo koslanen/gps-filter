@@ -62,6 +62,7 @@ def test_diagnostics_report_contains_expected_fields():
             accepted=2,
             duplicate=1,
             accuracy_rejections=3,
+            startup_accuracy_rejections=6,
             speed_rejections=4,
             speed_consistency_rejections=5,
             gap_accepted=6,
@@ -92,15 +93,17 @@ def test_diagnostics_report_contains_expected_fields():
     assert result["accepted_count"] == 2
     assert result["duplicate_count"] == 1
     assert result["accuracy_rejections"] == 3
+    assert result["startup_accuracy_rejections"] == 6
     assert result["speed_rejections"] == 4
     assert result["speed_consistency_rejections"] == 5
     assert result["gap_accepted_count"] == 6
     assert result["summary"] == {
         "total_received_count": 10,
-        "total_rejected_count": 13,
+        "total_rejected_count": 19,
         "accepted_count": 2,
         "duplicate_count": 1,
         "accuracy_rejections": 3,
+        "startup_accuracy_rejections": 6,
         "speed_rejections": 4,
         "speed_consistency_rejections": 5,
         "gap_accepted_count": 6,
@@ -210,6 +213,7 @@ def test_diagnostics_report_contains_filter_timeline():
     assert result["summary"]["accepted_count"] == 1
     assert result["summary"]["duplicate_count"] == 1
     assert result["summary"]["speed_consistency_rejections"] == 0
+    assert result["summary"]["startup_accuracy_rejections"] == 0
     assert result["summary"]["gap_accepted_count"] == 0
     assert result["summary"]["acceptance_rate_percent"] == 50.0
     assert result["summary"]["max_accuracy_m"] == 5.0
