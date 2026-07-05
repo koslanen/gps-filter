@@ -82,6 +82,7 @@ the exact entity IDs from the configured GPS Filter device name.
 - `sensor.gps_filter_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
 - `sensor.gps_filter_speed_consistency_rejections`
+- `sensor.gps_filter_gap_accepted_count`
 
 These sensors are intended for a developer/debug dashboard during drive testing.
 
@@ -119,6 +120,7 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
 - `sensor.gps_filter_speed_consistency_rejections`
+- `sensor.gps_filter_gap_accepted_count`
 
 When multiple GPS Filter entries are configured, each entry uses its config
 entry title as the Home Assistant device name, for example
@@ -212,6 +214,7 @@ The diagnostics summary includes:
 - accuracy_rejections
 - speed_rejections
 - speed_consistency_rejections
+- gap_accepted_count
 - acceptance_rate_percent
 - max_distance_m
 - max_calculated_speed_kmh

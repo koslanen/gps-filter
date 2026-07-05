@@ -43,6 +43,7 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_accuracy_rejections",
     "sensor.gps_filter_speed_rejections",
     "sensor.gps_filter_speed_consistency_rejections",
+    "sensor.gps_filter_gap_accepted_count",
 ]
 
 
@@ -94,6 +95,7 @@ def test_sensor_entities_expose_coordinator_state():
             accuracy_rejections=3,
             speed_rejections=4,
             speed_consistency_rejections=5,
+            gap_accepted=6,
         ),
     )
     coordinator.summary_stats.total_received_count = 4
@@ -155,6 +157,7 @@ def test_sensor_entities_expose_coordinator_state():
     assert sensors["accuracy_rejections"].native_value == 3
     assert sensors["speed_rejections"].native_value == 4
     assert sensors["speed_consistency_rejections"].native_value == 5
+    assert sensors["gap_accepted_count"].native_value == 6
 
 
 def test_sensor_entities_default_to_valid_dashboard_states():
@@ -191,6 +194,7 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["accuracy_rejections"].native_value == 0
     assert sensors["speed_rejections"].native_value == 0
     assert sensors["speed_consistency_rejections"].native_value == 0
+    assert sensors["gap_accepted_count"].native_value == 0
 
 
 def test_sensor_descriptions_follow_home_assistant_entity_id_conventions():
@@ -263,4 +267,5 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
         "speed_rejections": SensorStateClass.TOTAL_INCREASING,
         "speed_consistency_rejections": SensorStateClass.TOTAL_INCREASING,
+        "gap_accepted_count": SensorStateClass.TOTAL_INCREASING,
     }

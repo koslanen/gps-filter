@@ -119,6 +119,9 @@
       },
       "speed_consistency_rejections": {
         "name": "Speed Consistency Rejections"
+      },
+      "gap_accepted_count": {
+        "name": "Gap Accepted Count"
       }
     }
   },

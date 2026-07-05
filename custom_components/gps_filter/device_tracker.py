@@ -61,6 +61,7 @@ class FilteredTracker(CoordinatorEntity[GPSFilterCoordinator], TrackerEntity):
         attributes["speed_consistency_rejections"] = (
             stats.speed_consistency_rejections
         )
+        attributes["gap_accepted_count"] = stats.gap_accepted
 
         attributes["last_received_accuracy"] = None
         attributes["last_received_timestamp"] = None

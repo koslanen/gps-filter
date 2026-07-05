@@ -7,6 +7,7 @@ from math import asin, cos, radians, sin, sqrt
 from .models import EngineStats, FilterResult, GPSPoint
 
 EARTH_RADIUS = 6371000.0
+GAP_ACCEPTED_SECONDS = 120.0
 
 
 def haversine(
@@ -132,10 +133,14 @@ class GPSFilterEngine:
 
         self._last_point = point
         self.stats.accepted += 1
+        reason = "accepted"
+        if seconds > GAP_ACCEPTED_SECONDS:
+            self.stats.gap_accepted += 1
+            reason = "gap_accepted"
 
         return FilterResult(
             accepted=True,
-            reason="accepted",
+            reason=reason,
             point=point,
             distance_m=distance,
             calculated_speed_kmh=calculated_speed_kmh,

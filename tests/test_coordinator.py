@@ -274,6 +274,7 @@ def test_coordinator_tracks_post_drive_summary_statistics():
     assert coordinator.data.engine_stats.accuracy_rejections == 1
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
+    assert coordinator.data.engine_stats.gap_accepted == 0
     assert coordinator.acceptance_rate_percent == 50.0
     assert coordinator.summary_stats.max_distance_m > 0
     assert coordinator.summary_stats.max_calculated_speed_kmh > 0
@@ -374,6 +375,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     coordinator.data.engine_stats.accuracy_rejections = 3
     coordinator.data.engine_stats.speed_rejections = 4
     coordinator.data.engine_stats.speed_consistency_rejections = 5
+    coordinator.data.engine_stats.gap_accepted = 6
 
     coordinator.data.last_result = type(
         "Result",
@@ -394,6 +396,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     assert attributes["accuracy_rejections"] == 3
     assert attributes["speed_rejections"] == 4
     assert attributes["speed_consistency_rejections"] == 5
+    assert attributes["gap_accepted_count"] == 6
     assert attributes["last_result_reason"] == "accepted"
     assert attributes["last_result_accepted"] is True
     assert attributes["last_distance_m"] == 42.0
@@ -425,6 +428,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.data.engine_stats.accuracy_rejections = 1
     coordinator.data.engine_stats.speed_rejections = 1
     coordinator.data.engine_stats.speed_consistency_rejections = 1
+    coordinator.data.engine_stats.gap_accepted = 1
     coordinator.summary_stats.total_received_count = 4
     coordinator.summary_stats.max_distance_m = 42.0
     coordinator.summary_stats.max_calculated_speed_kmh = 12.5
@@ -442,6 +446,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
+    assert coordinator.data.engine_stats.gap_accepted == 0
     assert coordinator.summary_stats.total_received_count == 0
     assert coordinator.acceptance_rate_percent == 0.0
     assert coordinator.total_rejected_count == 0
@@ -474,6 +479,7 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
     assert coordinator.data.engine_stats.speed_consistency_rejections == 0
+    assert coordinator.data.engine_stats.gap_accepted == 0
     assert coordinator.summary_stats.total_received_count == 0
     assert coordinator.acceptance_rate_percent == 0.0
     assert coordinator.summary_stats.max_distance_m == 0.0

@@ -81,6 +81,7 @@ def _serialize_summary(coordinator: Any, stats: Any) -> dict[str, Any]:
             "speed_consistency_rejections",
             0,
         ),
+        "gap_accepted_count": getattr(stats, "gap_accepted", 0),
         "acceptance_rate_percent": getattr(
             coordinator,
             "acceptance_rate_percent",
@@ -150,6 +151,7 @@ async def async_get_config_entry_diagnostics(
             "accuracy_rejections": 0,
             "speed_rejections": 0,
             "speed_consistency_rejections": 0,
+            "gap_accepted_count": 0,
             "summary": _serialize_summary(coordinator, None),
             "last_received_point": None,
             "last_accepted_point": None,
@@ -172,6 +174,7 @@ async def async_get_config_entry_diagnostics(
             "speed_consistency_rejections",
             0,
         ),
+        "gap_accepted_count": getattr(stats, "gap_accepted", 0),
         "summary": _serialize_summary(coordinator, stats),
         "last_received_point": _serialize_gps_point(data.last_received_point),
         "last_accepted_point": _serialize_gps_point(data.last_accepted_point),

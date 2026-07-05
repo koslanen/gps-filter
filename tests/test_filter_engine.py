@@ -163,6 +163,36 @@ def test_engine_stats_track_decisions():
     assert engine.stats.accuracy_rejections == 1
     assert engine.stats.speed_rejections == 1
     assert engine.stats.speed_consistency_rejections == 0
+    assert engine.stats.gap_accepted == 0
+
+
+def test_long_gap_is_accepted_and_classified():
+    engine = GPSFilterEngine()
+
+    engine.process(
+        GPSPoint(
+            latitude=60.0,
+            longitude=25.0,
+            accuracy=5.0,
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+        )
+    )
+
+    result = engine.process(
+        GPSPoint(
+            latitude=60.001,
+            longitude=25.0,
+            accuracy=5.0,
+            speed=1.0,
+            timestamp=datetime(2024, 1, 1, 0, 3, 0, tzinfo=UTC),
+        )
+    )
+
+    assert result.accepted
+    assert result.reason == "gap_accepted"
+    assert result.seconds_since_last_accepted == 180.0
+    assert engine.stats.accepted == 2
+    assert engine.stats.gap_accepted == 1
 
 
 def test_speed_consistency_rejects_large_calculated_reported_difference():

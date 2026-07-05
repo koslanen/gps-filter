@@ -62,6 +62,13 @@ def _last_accepted_timestamp(coordinator: GPSFilterCoordinator):
     return coordinator.last_accepted_point.timestamp
 
 
+def _rounded(value: float | None, precision: int = 2) -> float:
+    """Return a dashboard-friendly rounded number."""
+    if value is None:
+        return 0.0
+    return round(value, precision)
+
+
 SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
     GPSFilterSensorEntityDescription(
         key="status",
@@ -79,7 +86,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
             0.0
             if coordinator.last_result is None
             or coordinator.last_result.distance_m is None
-            else coordinator.last_result.distance_m
+            else _rounded(coordinator.last_result.distance_m)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -92,7 +99,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
             0.0
             if coordinator.last_result is None
             or coordinator.last_result.calculated_speed_kmh is None
-            else coordinator.last_result.calculated_speed_kmh
+            else _rounded(coordinator.last_result.calculated_speed_kmh)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -105,7 +112,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
             0.0
             if coordinator.last_result is None
             or coordinator.last_result.reported_speed_kmh is None
-            else coordinator.last_result.reported_speed_kmh
+            else _rounded(coordinator.last_result.reported_speed_kmh)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -127,7 +134,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: (
             0.0
             if coordinator.last_received_point is None
-            else coordinator.last_received_point.accuracy
+            else _rounded(coordinator.last_received_point.accuracy)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -147,7 +154,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         translation_key="acceptance_rate",
         icon="mdi:percent-outline",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda coordinator: coordinator.acceptance_rate_percent,
+        value_fn=lambda coordinator: _rounded(coordinator.acceptance_rate_percent),
     ),
     GPSFilterSensorEntityDescription(
         key="seconds_since_last_accepted",
@@ -157,7 +164,10 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
             0.0
             if coordinator.last_result is None
             or coordinator.last_result.seconds_since_last_accepted is None
-            else coordinator.last_result.seconds_since_last_accepted
+            else _rounded(
+                coordinator.last_result.seconds_since_last_accepted,
+                1,
+            )
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -213,7 +223,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: coordinator.summary_stats.max_distance_m,
+        value_fn=lambda coordinator: _rounded(coordinator.summary_stats.max_distance_m),
     ),
     GPSFilterSensorEntityDescription(
         key="max_calculated_speed",
@@ -222,7 +232,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         value_fn=lambda coordinator: (
-            coordinator.summary_stats.max_calculated_speed_kmh
+            _rounded(coordinator.summary_stats.max_calculated_speed_kmh)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -231,7 +241,9 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
-        value_fn=lambda coordinator: coordinator.summary_stats.max_reported_speed_kmh,
+        value_fn=lambda coordinator: (
+            _rounded(coordinator.summary_stats.max_reported_speed_kmh)
+        ),
     ),
     GPSFilterSensorEntityDescription(
         key="max_accuracy",
@@ -239,7 +251,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:crosshairs-gps",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: coordinator.summary_stats.max_accuracy_m,
+        value_fn=lambda coordinator: _rounded(coordinator.summary_stats.max_accuracy_m),
     ),
     GPSFilterSensorEntityDescription(
         key="max_rejected_distance",
@@ -247,7 +259,9 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: coordinator.summary_stats.max_rejected_distance_m,
+        value_fn=lambda coordinator: (
+            _rounded(coordinator.summary_stats.max_rejected_distance_m)
+        ),
     ),
     GPSFilterSensorEntityDescription(
         key="max_rejected_calculated_speed",
@@ -256,7 +270,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         value_fn=lambda coordinator: (
-            coordinator.summary_stats.max_rejected_calculated_speed_kmh
+            _rounded(coordinator.summary_stats.max_rejected_calculated_speed_kmh)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -266,7 +280,7 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         value_fn=lambda coordinator: (
-            coordinator.summary_stats.max_rejected_reported_speed_kmh
+            _rounded(coordinator.summary_stats.max_rejected_reported_speed_kmh)
         ),
     ),
     GPSFilterSensorEntityDescription(
@@ -275,7 +289,9 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         icon="mdi:crosshairs-gps",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        value_fn=lambda coordinator: coordinator.summary_stats.max_rejected_accuracy_m,
+        value_fn=lambda coordinator: (
+            _rounded(coordinator.summary_stats.max_rejected_accuracy_m)
+        ),
     ),
     GPSFilterSensorEntityDescription(
         key="accepted_count",
@@ -313,6 +329,13 @@ SENSOR_DESCRIPTIONS: tuple[GPSFilterSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: (
             coordinator.data.engine_stats.speed_consistency_rejections
         ),
+    ),
+    GPSFilterSensorEntityDescription(
+        key="gap_accepted_count",
+        translation_key="gap_accepted_count",
+        icon="mdi:map-marker-path",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda coordinator: coordinator.data.engine_stats.gap_accepted,
     ),
 )
 
