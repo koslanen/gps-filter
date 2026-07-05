@@ -109,7 +109,7 @@ def test_calculated_speed_and_reported_speed_are_added_to_result():
         longitude=25.0,
         accuracy=5,
         speed=5.0,
-        timestamp=datetime(2024, 1, 1, 0, 0, 1, tzinfo=UTC),
+        timestamp=datetime(2024, 1, 1, 0, 0, 10, tzinfo=UTC),
     )
 
     engine.process(first_point)
@@ -120,6 +120,7 @@ def test_calculated_speed_and_reported_speed_are_added_to_result():
     assert result.distance_m is not None
     assert result.calculated_speed_kmh is not None
     assert result.reported_speed_kmh == 18.0
+    assert result.seconds_since_last_accepted == 10.0
     assert result.calculated_speed_kmh > 0
 
 
@@ -161,3 +162,61 @@ def test_engine_stats_track_decisions():
     assert engine.stats.duplicate == 1
     assert engine.stats.accuracy_rejections == 1
     assert engine.stats.speed_rejections == 1
+    assert engine.stats.speed_consistency_rejections == 0
+
+
+def test_speed_consistency_rejects_large_calculated_reported_difference():
+    engine = GPSFilterEngine(max_speed=220.0, max_speed_difference_kmh=40.0)
+
+    engine.process(
+        GPSPoint(
+            latitude=60.0,
+            longitude=25.0,
+            accuracy=5.0,
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+        )
+    )
+
+    result = engine.process(
+        GPSPoint(
+            latitude=60.001,
+            longitude=25.0,
+            accuracy=5.0,
+            speed=1.0,
+            timestamp=datetime(2024, 1, 1, 0, 0, 5, tzinfo=UTC),
+        )
+    )
+
+    assert not result.accepted
+    assert result.reason == "speed_consistency"
+    assert result.calculated_speed_kmh is not None
+    assert result.reported_speed_kmh == 3.6
+    assert result.seconds_since_last_accepted == 5.0
+    assert engine.stats.speed_consistency_rejections == 1
+    assert engine.stats.speed_rejections == 0
+
+
+def test_speed_consistency_requires_reported_speed():
+    engine = GPSFilterEngine(max_speed=220.0, max_speed_difference_kmh=40.0)
+
+    engine.process(
+        GPSPoint(
+            latitude=60.0,
+            longitude=25.0,
+            accuracy=5.0,
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+        )
+    )
+
+    result = engine.process(
+        GPSPoint(
+            latitude=60.001,
+            longitude=25.0,
+            accuracy=5.0,
+            speed=None,
+            timestamp=datetime(2024, 1, 1, 0, 0, 5, tzinfo=UTC),
+        )
+    )
+
+    assert result.accepted
+    assert engine.stats.speed_consistency_rejections == 0

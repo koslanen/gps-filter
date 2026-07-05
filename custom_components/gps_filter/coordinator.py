@@ -11,7 +11,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED
+from .const import CONF_MAX_ACCURACY, CONF_MAX_SPEED, CONF_MAX_SPEED_DIFFERENCE
 from .filter_engine import GPSFilterEngine
 from .helpers import get_config_value
 from .models import (
@@ -59,6 +59,10 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.engine = GPSFilterEngine(
             max_speed=get_config_value(entry, CONF_MAX_SPEED),
             max_accuracy=get_config_value(entry, CONF_MAX_ACCURACY),
+            max_speed_difference_kmh=get_config_value(
+                entry,
+                CONF_MAX_SPEED_DIFFERENCE,
+            ),
         )
 
         self._remove_listener = None
@@ -101,6 +105,16 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.data.engine_stats.accepted
             / self.summary_stats.total_received_count
             * 100
+        )
+
+    @property
+    def total_rejected_count(self) -> int:
+        """Return the total number of rejected points."""
+        return (
+            self.data.engine_stats.duplicate
+            + self.data.engine_stats.accuracy_rejections
+            + self.data.engine_stats.speed_rejections
+            + self.data.engine_stats.speed_consistency_rejections
         )
 
     async def async_start(self) -> None:
@@ -164,6 +178,7 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 distance_m=result.distance_m,
                 calculated_speed_kmh=result.calculated_speed_kmh,
                 reported_speed_kmh=result.reported_speed_kmh,
+                seconds_since_last_accepted=result.seconds_since_last_accepted,
             )
         )
 
@@ -231,6 +246,10 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.engine = GPSFilterEngine(
             max_speed=get_config_value(self.entry, CONF_MAX_SPEED),
             max_accuracy=get_config_value(self.entry, CONF_MAX_ACCURACY),
+            max_speed_difference_kmh=get_config_value(
+                self.entry,
+                CONF_MAX_SPEED_DIFFERENCE,
+            ),
         )
         self.summary_stats = SummaryStats()
         self.filter_timeline.clear()
@@ -239,6 +258,37 @@ class GPSFilterCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def _update_summary_stats(self, point: GPSPoint, result: FilterResult) -> None:
         """Update post-drive summary statistics from a filter decision."""
         self.summary_stats.total_received_count += 1
+
+        if not result.accepted:
+            self.summary_stats.max_rejected_accuracy_m = max(
+                self.summary_stats.max_rejected_accuracy_m,
+                point.accuracy,
+            )
+
+            if result.distance_m is not None:
+                self.summary_stats.max_rejected_distance_m = max(
+                    self.summary_stats.max_rejected_distance_m,
+                    result.distance_m,
+                )
+
+            if result.calculated_speed_kmh is not None:
+                self.summary_stats.max_rejected_calculated_speed_kmh = max(
+                    self.summary_stats.max_rejected_calculated_speed_kmh,
+                    result.calculated_speed_kmh,
+                )
+
+            reported_speed_kmh = result.reported_speed_kmh
+            if reported_speed_kmh is None and point.speed is not None:
+                reported_speed_kmh = point.speed * 3.6
+
+            if reported_speed_kmh is not None:
+                self.summary_stats.max_rejected_reported_speed_kmh = max(
+                    self.summary_stats.max_rejected_reported_speed_kmh,
+                    reported_speed_kmh,
+                )
+
+            return
+
         self.summary_stats.max_accuracy_m = max(
             self.summary_stats.max_accuracy_m,
             point.accuracy,

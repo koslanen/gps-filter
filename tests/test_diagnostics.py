@@ -33,6 +33,7 @@ class DummyEntry:
             "source": "device_tracker.test",
             "max_speed": 220.0,
             "max_accuracy": 30.0,
+            "max_speed_difference_kmh": 40.0,
         }
         self.options = options or {}
 
@@ -52,12 +53,17 @@ def test_diagnostics_report_contains_expected_fields():
             accuracy=5.0,
             timestamp=datetime(2024, 1, 1, tzinfo=UTC),
         ),
-        last_result=FilterResult(accepted=True, reason="accepted"),
+        last_result=FilterResult(
+            accepted=True,
+            reason="accepted",
+            seconds_since_last_accepted=5.0,
+        ),
         engine_stats=EngineStats(
             accepted=2,
             duplicate=1,
             accuracy_rejections=3,
             speed_rejections=4,
+            speed_consistency_rejections=5,
         ),
     )
     coordinator.summary_stats.total_received_count = 10
@@ -65,6 +71,10 @@ def test_diagnostics_report_contains_expected_fields():
     coordinator.summary_stats.max_calculated_speed_kmh = 40.0
     coordinator.summary_stats.max_reported_speed_kmh = 36.0
     coordinator.summary_stats.max_accuracy_m = 25.0
+    coordinator.summary_stats.max_rejected_distance_m = 100.0
+    coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
+    coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
+    coordinator.summary_stats.max_rejected_accuracy_m = 98.0
 
     hass = SimpleNamespace(data={"gps_filter": {"entry-1": coordinator}})
     entry = DummyEntry()
@@ -76,26 +86,35 @@ def test_diagnostics_report_contains_expected_fields():
     assert result["effective_filter_config"] == {
         "max_speed": 220.0,
         "max_accuracy": 30.0,
+        "max_speed_difference_kmh": 40.0,
     }
     assert result["accepted_count"] == 2
     assert result["duplicate_count"] == 1
     assert result["accuracy_rejections"] == 3
     assert result["speed_rejections"] == 4
+    assert result["speed_consistency_rejections"] == 5
     assert result["summary"] == {
         "total_received_count": 10,
+        "total_rejected_count": 13,
         "accepted_count": 2,
         "duplicate_count": 1,
         "accuracy_rejections": 3,
         "speed_rejections": 4,
+        "speed_consistency_rejections": 5,
         "acceptance_rate_percent": 20.0,
         "max_distance_m": 88.0,
         "max_calculated_speed_kmh": 40.0,
         "max_reported_speed_kmh": 36.0,
         "max_accuracy_m": 25.0,
+        "max_rejected_distance_m": 100.0,
+        "max_rejected_calculated_speed_kmh": 300.0,
+        "max_rejected_reported_speed_kmh": 97.2,
+        "max_rejected_accuracy_m": 98.0,
     }
     assert result["last_received_point"]["latitude"] == 60.0
     assert result["last_accepted_point"]["latitude"] == 60.0
     assert result["last_filter_result"]["reason"] == "accepted"
+    assert result["last_filter_result"]["seconds_since_last_accepted"] == 5.0
     assert result["filter_timeline"] == []
 
 
@@ -106,6 +125,7 @@ def test_diagnostics_report_uses_effective_options():
             options={
                 "max_speed": 120.0,
                 "max_accuracy": 15.0,
+                "max_speed_difference_kmh": 30.0,
             }
         ),
     )
@@ -115,6 +135,7 @@ def test_diagnostics_report_uses_effective_options():
         options={
             "max_speed": 120.0,
             "max_accuracy": 15.0,
+            "max_speed_difference_kmh": 30.0,
         }
     )
 
@@ -123,6 +144,7 @@ def test_diagnostics_report_uses_effective_options():
     assert result["effective_filter_config"] == {
         "max_speed": 120.0,
         "max_accuracy": 15.0,
+        "max_speed_difference_kmh": 30.0,
     }
 
 
@@ -165,6 +187,7 @@ def test_diagnostics_report_contains_filter_timeline():
             "distance_m": None,
             "calculated_speed_kmh": None,
             "reported_speed_kmh": None,
+            "seconds_since_last_accepted": None,
         },
         {
             "timestamp": "2024-01-01T00:00:01+00:00",
@@ -176,13 +199,17 @@ def test_diagnostics_report_contains_filter_timeline():
             "distance_m": 0.0,
             "calculated_speed_kmh": 0.0,
             "reported_speed_kmh": 0.0,
+            "seconds_since_last_accepted": 1.0,
         },
     ]
     assert result["summary"]["total_received_count"] == 2
+    assert result["summary"]["total_rejected_count"] == 1
     assert result["summary"]["accepted_count"] == 1
     assert result["summary"]["duplicate_count"] == 1
+    assert result["summary"]["speed_consistency_rejections"] == 0
     assert result["summary"]["acceptance_rate_percent"] == 50.0
     assert result["summary"]["max_accuracy_m"] == 5.0
+    assert result["summary"]["max_rejected_accuracy_m"] == 5.0
 
 
 def test_manifest_version_matches_const_version():

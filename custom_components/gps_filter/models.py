@@ -28,6 +28,7 @@ class FilterResult:
     distance_m: float | None = None
     calculated_speed_kmh: float | None = None
     reported_speed_kmh: float | None = None
+    seconds_since_last_accepted: float | None = None
 
 
 @dataclass(slots=True)
@@ -43,6 +44,7 @@ class FilterTimelineEntry:
     distance_m: float | None = None
     calculated_speed_kmh: float | None = None
     reported_speed_kmh: float | None = None
+    seconds_since_last_accepted: float | None = None
 
 
 @dataclass(slots=True)
@@ -53,6 +55,7 @@ class EngineStats:
     duplicate: int = 0
     accuracy_rejections: int = 0
     speed_rejections: int = 0
+    speed_consistency_rejections: int = 0
 
 
 @dataclass(slots=True)
@@ -64,6 +67,10 @@ class SummaryStats:
     max_calculated_speed_kmh: float = 0.0
     max_reported_speed_kmh: float = 0.0
     max_accuracy_m: float = 0.0
+    max_rejected_distance_m: float = 0.0
+    max_rejected_calculated_speed_kmh: float = 0.0
+    max_rejected_reported_speed_kmh: float = 0.0
+    max_rejected_accuracy_m: float = 0.0
 
 
 @dataclass(slots=True)

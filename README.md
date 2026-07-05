@@ -29,6 +29,8 @@ The current filter accepts the first valid point, then rejects updates when:
 - GPS accuracy exceeds the configured maximum accuracy
 - The incoming point is an exact duplicate of the last accepted point
 - The calculated movement speed exceeds the configured maximum speed
+- The calculated movement speed and reported source speed differ by more than
+  the configured maximum speed difference
 
 The integration tracks both calculated speed and reported source speed. Reported
 speed is converted from m/s to km/h when present.
@@ -61,14 +63,25 @@ the exact entity IDs from the configured GPS Filter device name.
 - `sensor.gps_filter_last_received_timestamp`
 - `sensor.gps_filter_last_accepted_timestamp`
 - `sensor.gps_filter_acceptance_rate`
+- `sensor.gps_filter_seconds_since_last_accepted`
+- `sensor.gps_filter_max_speed_threshold`
+- `sensor.gps_filter_max_speed_difference_threshold`
+- `sensor.gps_filter_max_accuracy_threshold`
+- `sensor.gps_filter_total_received_count`
+- `sensor.gps_filter_total_rejected_count`
 - `sensor.gps_filter_max_distance`
 - `sensor.gps_filter_max_calculated_speed`
 - `sensor.gps_filter_max_reported_speed`
 - `sensor.gps_filter_max_accuracy`
+- `sensor.gps_filter_max_rejected_distance`
+- `sensor.gps_filter_max_rejected_calculated_speed`
+- `sensor.gps_filter_max_rejected_reported_speed`
+- `sensor.gps_filter_max_rejected_accuracy`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
+- `sensor.gps_filter_speed_consistency_rejections`
 
 These sensors are intended for a developer/debug dashboard during drive testing.
 
@@ -87,14 +100,25 @@ For one configured tracker, the default generated names are expected to be:
 - `sensor.gps_filter_last_received_timestamp`
 - `sensor.gps_filter_last_accepted_timestamp`
 - `sensor.gps_filter_acceptance_rate`
+- `sensor.gps_filter_seconds_since_last_accepted`
+- `sensor.gps_filter_max_speed_threshold`
+- `sensor.gps_filter_max_speed_difference_threshold`
+- `sensor.gps_filter_max_accuracy_threshold`
+- `sensor.gps_filter_total_received_count`
+- `sensor.gps_filter_total_rejected_count`
 - `sensor.gps_filter_max_distance`
 - `sensor.gps_filter_max_calculated_speed`
 - `sensor.gps_filter_max_reported_speed`
 - `sensor.gps_filter_max_accuracy`
+- `sensor.gps_filter_max_rejected_distance`
+- `sensor.gps_filter_max_rejected_calculated_speed`
+- `sensor.gps_filter_max_rejected_reported_speed`
+- `sensor.gps_filter_max_rejected_accuracy`
 - `sensor.gps_filter_accepted_count`
 - `sensor.gps_filter_duplicate_count`
 - `sensor.gps_filter_accuracy_rejections`
 - `sensor.gps_filter_speed_rejections`
+- `sensor.gps_filter_speed_consistency_rejections`
 
 When multiple GPS Filter entries are configured, each entry uses its config
 entry title as the Home Assistant device name, for example
@@ -116,8 +140,9 @@ use `TOTAL_INCREASING`.
 6. Set:
    - Maximum speed in km/h
    - Maximum GPS accuracy in meters
+   - Maximum speed difference in km/h
 
-Both threshold values must be greater than zero.
+All threshold values must be greater than zero.
 
 ## Options
 
@@ -125,6 +150,7 @@ After setup, thresholds can be edited from the integration options:
 
 - Maximum speed
 - Maximum GPS accuracy
+- Maximum speed difference
 
 Changing options reloads the config entry so the coordinator and filter engine
 use the updated values.
@@ -172,6 +198,7 @@ decisions. Each timeline entry contains:
 - distance_m
 - calculated_speed_kmh
 - reported_speed_kmh
+- seconds_since_last_accepted
 
 The timeline is not persisted and is reset when Home Assistant restarts or when
 `gps_filter.reset_filter` is called.
@@ -179,15 +206,21 @@ The timeline is not persisted and is reset when Home Assistant restarts or when
 The diagnostics summary includes:
 
 - total_received_count
+- total_rejected_count
 - accepted_count
 - duplicate_count
 - accuracy_rejections
 - speed_rejections
+- speed_consistency_rejections
 - acceptance_rate_percent
 - max_distance_m
 - max_calculated_speed_kmh
 - max_reported_speed_kmh
 - max_accuracy_m
+- max_rejected_distance_m
+- max_rejected_calculated_speed_kmh
+- max_rejected_reported_speed_kmh
+- max_rejected_accuracy_m
 
 Summary statistics are in-memory only. They reset when
 `gps_filter.reset_statistics` or `gps_filter.reset_filter` is called.

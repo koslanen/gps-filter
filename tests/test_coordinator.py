@@ -21,6 +21,7 @@ class DummyEntry:
             "source": "device_tracker.test",
             "max_speed": 220.0,
             "max_accuracy": 30.0,
+            "max_speed_difference_kmh": 40.0,
         }
         self.options = options or {}
 
@@ -120,12 +121,14 @@ def test_coordinator_uses_options_for_thresholds():
             options={
                 "max_speed": 80.0,
                 "max_accuracy": 12.0,
+                "max_speed_difference_kmh": 25.0,
             }
         ),
     )
 
     assert coordinator.engine._max_speed == 80.0
     assert coordinator.engine._max_accuracy == 12.0
+    assert coordinator.engine._max_speed_difference_kmh == 25.0
 
 
 def test_coordinator_logs_point_diagnostics_at_debug(caplog):
@@ -270,11 +273,78 @@ def test_coordinator_tracks_post_drive_summary_statistics():
     assert coordinator.data.engine_stats.duplicate == 1
     assert coordinator.data.engine_stats.accuracy_rejections == 1
     assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.acceptance_rate_percent == 50.0
     assert coordinator.summary_stats.max_distance_m > 0
     assert coordinator.summary_stats.max_calculated_speed_kmh > 0
     assert coordinator.summary_stats.max_reported_speed_kmh == 36.0
-    assert coordinator.summary_stats.max_accuracy_m == 100.0
+    assert coordinator.summary_stats.max_accuracy_m == 8.0
+
+
+def test_rejected_points_do_not_update_summary_max_values():
+    coordinator = GPSFilterCoordinator(
+        hass=Mock(),
+        entry=DummyEntry(
+            options={
+                "max_speed": 50.0,
+                "max_accuracy": 30.0,
+            }
+        ),
+    )
+
+    states = [
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.0,
+                "gps_accuracy": 5.0,
+                "speed": 5.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 60.0,
+                "longitude": 25.001,
+                "gps_accuracy": 6.0,
+                "speed": 8.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 1, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 61.0,
+                "longitude": 26.0,
+                "gps_accuracy": 98.0,
+                "speed": 27.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 2, 0, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            attributes={
+                "latitude": 61.0,
+                "longitude": 26.0,
+                "gps_accuracy": 1.0,
+                "speed": 40.0,
+            },
+            last_updated=datetime(2024, 1, 1, 0, 2, 1, tzinfo=UTC),
+        ),
+    ]
+
+    for state in states:
+        coordinator._state_changed(SimpleNamespace(data={"new_state": state}))
+
+    assert coordinator.summary_stats.total_received_count == 4
+    assert coordinator.total_rejected_count == 2
+    assert coordinator.acceptance_rate_percent == 50.0
+    assert coordinator.summary_stats.max_accuracy_m == 6.0
+    assert coordinator.summary_stats.max_reported_speed_kmh == 28.8
+    assert coordinator.summary_stats.max_calculated_speed_kmh < 10.0
+    assert coordinator.summary_stats.max_distance_m < 100.0
+    assert coordinator.summary_stats.max_rejected_accuracy_m == 98.0
+    assert coordinator.summary_stats.max_rejected_reported_speed_kmh == 144.0
+    assert coordinator.summary_stats.max_rejected_calculated_speed_kmh > 50.0
+    assert coordinator.summary_stats.max_rejected_distance_m > 100.0
 
 
 def test_reset_filter_clears_filter_timeline():
@@ -303,6 +373,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     coordinator.data.engine_stats.duplicate = 1
     coordinator.data.engine_stats.accuracy_rejections = 3
     coordinator.data.engine_stats.speed_rejections = 4
+    coordinator.data.engine_stats.speed_consistency_rejections = 5
 
     coordinator.data.last_result = type(
         "Result",
@@ -322,6 +393,7 @@ def test_filtered_tracker_exposes_filter_metrics_as_attributes():
     assert attributes["duplicate_count"] == 1
     assert attributes["accuracy_rejections"] == 3
     assert attributes["speed_rejections"] == 4
+    assert attributes["speed_consistency_rejections"] == 5
     assert attributes["last_result_reason"] == "accepted"
     assert attributes["last_result_accepted"] is True
     assert attributes["last_distance_m"] == 42.0
@@ -352,11 +424,16 @@ def test_coordinator_reset_statistics_and_filter_state():
     coordinator.data.engine_stats.duplicate = 1
     coordinator.data.engine_stats.accuracy_rejections = 1
     coordinator.data.engine_stats.speed_rejections = 1
+    coordinator.data.engine_stats.speed_consistency_rejections = 1
     coordinator.summary_stats.total_received_count = 4
     coordinator.summary_stats.max_distance_m = 42.0
     coordinator.summary_stats.max_calculated_speed_kmh = 12.5
     coordinator.summary_stats.max_reported_speed_kmh = 10.0
     coordinator.summary_stats.max_accuracy_m = 30.0
+    coordinator.summary_stats.max_rejected_distance_m = 100.0
+    coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
+    coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
+    coordinator.summary_stats.max_rejected_accuracy_m = 98.0
 
     coordinator.reset_statistics()
 
@@ -364,18 +441,28 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.summary_stats.total_received_count == 0
     assert coordinator.acceptance_rate_percent == 0.0
+    assert coordinator.total_rejected_count == 0
     assert coordinator.summary_stats.max_distance_m == 0.0
     assert coordinator.summary_stats.max_calculated_speed_kmh == 0.0
     assert coordinator.summary_stats.max_reported_speed_kmh == 0.0
     assert coordinator.summary_stats.max_accuracy_m == 0.0
+    assert coordinator.summary_stats.max_rejected_distance_m == 0.0
+    assert coordinator.summary_stats.max_rejected_calculated_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_rejected_reported_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_rejected_accuracy_m == 0.0
 
     coordinator.summary_stats.total_received_count = 2
     coordinator.summary_stats.max_distance_m = 24.0
     coordinator.summary_stats.max_calculated_speed_kmh = 20.0
     coordinator.summary_stats.max_reported_speed_kmh = 9.0
     coordinator.summary_stats.max_accuracy_m = 15.0
+    coordinator.summary_stats.max_rejected_distance_m = 100.0
+    coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
+    coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
+    coordinator.summary_stats.max_rejected_accuracy_m = 98.0
 
     coordinator.reset_filter()
 
@@ -386,9 +473,14 @@ def test_coordinator_reset_statistics_and_filter_state():
     assert coordinator.data.engine_stats.duplicate == 0
     assert coordinator.data.engine_stats.accuracy_rejections == 0
     assert coordinator.data.engine_stats.speed_rejections == 0
+    assert coordinator.data.engine_stats.speed_consistency_rejections == 0
     assert coordinator.summary_stats.total_received_count == 0
     assert coordinator.acceptance_rate_percent == 0.0
     assert coordinator.summary_stats.max_distance_m == 0.0
     assert coordinator.summary_stats.max_calculated_speed_kmh == 0.0
     assert coordinator.summary_stats.max_reported_speed_kmh == 0.0
     assert coordinator.summary_stats.max_accuracy_m == 0.0
+    assert coordinator.summary_stats.max_rejected_distance_m == 0.0
+    assert coordinator.summary_stats.max_rejected_calculated_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_rejected_reported_speed_kmh == 0.0
+    assert coordinator.summary_stats.max_rejected_accuracy_m == 0.0

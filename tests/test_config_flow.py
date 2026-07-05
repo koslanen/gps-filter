@@ -12,6 +12,7 @@ from custom_components.gps_filter.config_flow import (
 from custom_components.gps_filter.const import (
     CONF_MAX_ACCURACY,
     CONF_MAX_SPEED,
+    CONF_MAX_SPEED_DIFFERENCE,
     CONF_SOURCE,
     DOMAIN,
 )
@@ -23,6 +24,7 @@ class DummyEntry:
             CONF_SOURCE: "device_tracker.test",
             CONF_MAX_SPEED: 220.0,
             CONF_MAX_ACCURACY: 30.0,
+            CONF_MAX_SPEED_DIFFERENCE: 40.0,
         }
         self.options = options or {}
 
@@ -36,6 +38,7 @@ def test_config_schema_rejects_zero_or_negative_thresholds():
                 CONF_SOURCE: "device_tracker.test",
                 CONF_MAX_SPEED: 0,
                 CONF_MAX_ACCURACY: 30,
+                CONF_MAX_SPEED_DIFFERENCE: 40,
             }
         )
 
@@ -45,6 +48,17 @@ def test_config_schema_rejects_zero_or_negative_thresholds():
                 CONF_SOURCE: "device_tracker.test",
                 CONF_MAX_SPEED: 220,
                 CONF_MAX_ACCURACY: -1,
+                CONF_MAX_SPEED_DIFFERENCE: 40,
+            }
+        )
+
+    with pytest.raises(vol.Invalid):
+        schema(
+            {
+                CONF_SOURCE: "device_tracker.test",
+                CONF_MAX_SPEED: 220,
+                CONF_MAX_ACCURACY: 30,
+                CONF_MAX_SPEED_DIFFERENCE: 0,
             }
         )
 
@@ -57,11 +71,13 @@ def test_config_schema_accepts_positive_thresholds():
             CONF_SOURCE: "device_tracker.test",
             CONF_MAX_SPEED: "120.5",
             CONF_MAX_ACCURACY: "15",
+            CONF_MAX_SPEED_DIFFERENCE: "35",
         }
     )
 
     assert result[CONF_MAX_SPEED] == 120.5
     assert result[CONF_MAX_ACCURACY] == 15.0
+    assert result[CONF_MAX_SPEED_DIFFERENCE] == 35.0
 
 
 def test_options_schema_uses_existing_options_as_defaults():
@@ -69,6 +85,7 @@ def test_options_schema_uses_existing_options_as_defaults():
         {
             CONF_MAX_SPEED: 100.0,
             CONF_MAX_ACCURACY: 10.0,
+            CONF_MAX_SPEED_DIFFERENCE: 25.0,
         }
     )
 
@@ -82,9 +99,15 @@ def test_options_schema_uses_existing_options_as_defaults():
         for marker in schema.schema
         if marker.schema == CONF_MAX_ACCURACY
     )
+    max_speed_difference_marker = next(
+        marker
+        for marker in schema.schema
+        if marker.schema == CONF_MAX_SPEED_DIFFERENCE
+    )
 
     assert max_speed_marker.default() == 100.0
     assert max_accuracy_marker.default() == 10.0
+    assert max_speed_difference_marker.default() == 25.0
 
 
 def test_options_schema_rejects_zero_or_negative_thresholds():
@@ -92,6 +115,7 @@ def test_options_schema_rejects_zero_or_negative_thresholds():
         {
             CONF_MAX_SPEED: 100.0,
             CONF_MAX_ACCURACY: 10.0,
+            CONF_MAX_SPEED_DIFFERENCE: 40.0,
         }
     )
 
@@ -100,6 +124,7 @@ def test_options_schema_rejects_zero_or_negative_thresholds():
             {
                 CONF_MAX_SPEED: 100.0,
                 CONF_MAX_ACCURACY: 0,
+                CONF_MAX_SPEED_DIFFERENCE: 40.0,
             }
         )
 
@@ -108,6 +133,16 @@ def test_options_schema_rejects_zero_or_negative_thresholds():
             {
                 CONF_MAX_SPEED: -1,
                 CONF_MAX_ACCURACY: 10.0,
+                CONF_MAX_SPEED_DIFFERENCE: 40.0,
+            }
+        )
+
+    with pytest.raises(vol.Invalid):
+        schema(
+            {
+                CONF_MAX_SPEED: 100.0,
+                CONF_MAX_ACCURACY: 10.0,
+                CONF_MAX_SPEED_DIFFERENCE: -1,
             }
         )
 
@@ -129,6 +164,7 @@ def test_options_flow_saves_positive_thresholds():
             {
                 CONF_MAX_SPEED: 130.0,
                 CONF_MAX_ACCURACY: 12.0,
+                CONF_MAX_SPEED_DIFFERENCE: 30.0,
             }
         )
     )
@@ -137,6 +173,7 @@ def test_options_flow_saves_positive_thresholds():
     assert result["data"] == {
         CONF_MAX_SPEED: 130.0,
         CONF_MAX_ACCURACY: 12.0,
+        CONF_MAX_SPEED_DIFFERENCE: 30.0,
     }
 
 

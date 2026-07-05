@@ -24,14 +24,25 @@ EXPECTED_ENTITY_IDS = [
     "sensor.gps_filter_last_received_timestamp",
     "sensor.gps_filter_last_accepted_timestamp",
     "sensor.gps_filter_acceptance_rate",
+    "sensor.gps_filter_seconds_since_last_accepted",
+    "sensor.gps_filter_max_speed_threshold",
+    "sensor.gps_filter_max_speed_difference_threshold",
+    "sensor.gps_filter_max_accuracy_threshold",
+    "sensor.gps_filter_total_received_count",
+    "sensor.gps_filter_total_rejected_count",
     "sensor.gps_filter_max_distance",
     "sensor.gps_filter_max_calculated_speed",
     "sensor.gps_filter_max_reported_speed",
     "sensor.gps_filter_max_accuracy",
+    "sensor.gps_filter_max_rejected_distance",
+    "sensor.gps_filter_max_rejected_calculated_speed",
+    "sensor.gps_filter_max_rejected_reported_speed",
+    "sensor.gps_filter_max_rejected_accuracy",
     "sensor.gps_filter_accepted_count",
     "sensor.gps_filter_duplicate_count",
     "sensor.gps_filter_accuracy_rejections",
     "sensor.gps_filter_speed_rejections",
+    "sensor.gps_filter_speed_consistency_rejections",
 ]
 
 
@@ -75,12 +86,14 @@ def test_sensor_entities_expose_coordinator_state():
             distance_m=42.0,
             calculated_speed_kmh=12.5,
             reported_speed_kmh=10.0,
+            seconds_since_last_accepted=5.0,
         ),
         engine_stats=EngineStats(
             accepted=2,
             duplicate=1,
             accuracy_rejections=3,
             speed_rejections=4,
+            speed_consistency_rejections=5,
         ),
     )
     coordinator.summary_stats.total_received_count = 4
@@ -88,6 +101,10 @@ def test_sensor_entities_expose_coordinator_state():
     coordinator.summary_stats.max_calculated_speed_kmh = 40.0
     coordinator.summary_stats.max_reported_speed_kmh = 36.0
     coordinator.summary_stats.max_accuracy_m = 25.0
+    coordinator.summary_stats.max_rejected_distance_m = 100.0
+    coordinator.summary_stats.max_rejected_calculated_speed_kmh = 300.0
+    coordinator.summary_stats.max_rejected_reported_speed_kmh = 97.2
+    coordinator.summary_stats.max_rejected_accuracy_m = 98.0
     coordinator.data.last_received_point.timestamp = datetime(
         2024,
         1,
@@ -119,14 +136,25 @@ def test_sensor_entities_expose_coordinator_state():
         tzinfo=UTC,
     )
     assert sensors["acceptance_rate"].native_value == 50.0
+    assert sensors["seconds_since_last_accepted"].native_value == 5.0
+    assert sensors["max_speed_threshold"].native_value == 220.0
+    assert sensors["max_speed_difference_threshold"].native_value == 40.0
+    assert sensors["max_accuracy_threshold"].native_value == 30.0
+    assert sensors["total_received_count"].native_value == 4
+    assert sensors["total_rejected_count"].native_value == 13
     assert sensors["max_distance"].native_value == 88.0
     assert sensors["max_calculated_speed"].native_value == 40.0
     assert sensors["max_reported_speed"].native_value == 36.0
     assert sensors["max_accuracy"].native_value == 25.0
+    assert sensors["max_rejected_distance"].native_value == 100.0
+    assert sensors["max_rejected_calculated_speed"].native_value == 300.0
+    assert sensors["max_rejected_reported_speed"].native_value == 97.2
+    assert sensors["max_rejected_accuracy"].native_value == 98.0
     assert sensors["accepted_count"].native_value == 2
     assert sensors["duplicate_count"].native_value == 1
     assert sensors["accuracy_rejections"].native_value == 3
     assert sensors["speed_rejections"].native_value == 4
+    assert sensors["speed_consistency_rejections"].native_value == 5
 
 
 def test_sensor_entities_default_to_valid_dashboard_states():
@@ -144,14 +172,25 @@ def test_sensor_entities_default_to_valid_dashboard_states():
     assert sensors["last_received_timestamp"].native_value is None
     assert sensors["last_accepted_timestamp"].native_value is None
     assert sensors["acceptance_rate"].native_value == 0.0
+    assert sensors["seconds_since_last_accepted"].native_value == 0.0
+    assert sensors["max_speed_threshold"].native_value == 220.0
+    assert sensors["max_speed_difference_threshold"].native_value == 40.0
+    assert sensors["max_accuracy_threshold"].native_value == 30.0
+    assert sensors["total_received_count"].native_value == 0
+    assert sensors["total_rejected_count"].native_value == 0
     assert sensors["max_distance"].native_value == 0.0
     assert sensors["max_calculated_speed"].native_value == 0.0
     assert sensors["max_reported_speed"].native_value == 0.0
     assert sensors["max_accuracy"].native_value == 0.0
+    assert sensors["max_rejected_distance"].native_value == 0.0
+    assert sensors["max_rejected_calculated_speed"].native_value == 0.0
+    assert sensors["max_rejected_reported_speed"].native_value == 0.0
+    assert sensors["max_rejected_accuracy"].native_value == 0.0
     assert sensors["accepted_count"].native_value == 0
     assert sensors["duplicate_count"].native_value == 0
     assert sensors["accuracy_rejections"].native_value == 0
     assert sensors["speed_rejections"].native_value == 0
+    assert sensors["speed_consistency_rejections"].native_value == 0
 
 
 def test_sensor_descriptions_follow_home_assistant_entity_id_conventions():
@@ -205,12 +244,23 @@ def test_only_counter_sensors_compile_long_term_statistics():
         "last_received_timestamp": None,
         "last_accepted_timestamp": None,
         "acceptance_rate": None,
+        "seconds_since_last_accepted": None,
+        "max_speed_threshold": None,
+        "max_speed_difference_threshold": None,
+        "max_accuracy_threshold": None,
+        "total_received_count": SensorStateClass.TOTAL_INCREASING,
+        "total_rejected_count": SensorStateClass.TOTAL_INCREASING,
         "max_distance": None,
         "max_calculated_speed": None,
         "max_reported_speed": None,
         "max_accuracy": None,
+        "max_rejected_distance": None,
+        "max_rejected_calculated_speed": None,
+        "max_rejected_reported_speed": None,
+        "max_rejected_accuracy": None,
         "accepted_count": SensorStateClass.TOTAL_INCREASING,
         "duplicate_count": SensorStateClass.TOTAL_INCREASING,
         "accuracy_rejections": SensorStateClass.TOTAL_INCREASING,
         "speed_rejections": SensorStateClass.TOTAL_INCREASING,
+        "speed_consistency_rejections": SensorStateClass.TOTAL_INCREASING,
     }

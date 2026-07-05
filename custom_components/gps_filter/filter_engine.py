@@ -38,10 +38,12 @@ class GPSFilterEngine:
         *,
         max_speed: float = 220.0,
         max_accuracy: float = 30.0,
+        max_speed_difference_kmh: float = 40.0,
     ) -> None:
 
         self._max_speed = max_speed
         self._max_accuracy = max_accuracy
+        self._max_speed_difference_kmh = max_speed_difference_kmh
 
         self._last_point: GPSPoint | None = None
         self.stats = EngineStats()
@@ -83,9 +85,7 @@ class GPSFilterEngine:
             seconds = 1
 
         calculated_speed_kmh = distance / seconds * 3.6
-        reported_speed_kmh = (
-            point.speed * 3.6 if point.speed is not None else None
-        )
+        reported_speed_kmh = point.speed * 3.6 if point.speed is not None else None
 
         if (
             point.latitude == self._last_point.latitude
@@ -99,6 +99,7 @@ class GPSFilterEngine:
                 distance_m=0.0,
                 calculated_speed_kmh=0.0,
                 reported_speed_kmh=reported_speed_kmh,
+                seconds_since_last_accepted=seconds,
             )
 
         if calculated_speed_kmh > self._max_speed:
@@ -110,6 +111,23 @@ class GPSFilterEngine:
                 distance_m=distance,
                 calculated_speed_kmh=calculated_speed_kmh,
                 reported_speed_kmh=reported_speed_kmh,
+                seconds_since_last_accepted=seconds,
+            )
+
+        if (
+            reported_speed_kmh is not None
+            and abs(calculated_speed_kmh - reported_speed_kmh)
+            > self._max_speed_difference_kmh
+        ):
+            self.stats.speed_consistency_rejections += 1
+            return FilterResult(
+                accepted=False,
+                reason="speed_consistency",
+                point=None,
+                distance_m=distance,
+                calculated_speed_kmh=calculated_speed_kmh,
+                reported_speed_kmh=reported_speed_kmh,
+                seconds_since_last_accepted=seconds,
             )
 
         self._last_point = point
@@ -122,4 +140,5 @@ class GPSFilterEngine:
             distance_m=distance,
             calculated_speed_kmh=calculated_speed_kmh,
             reported_speed_kmh=reported_speed_kmh,
+            seconds_since_last_accepted=seconds,
         )

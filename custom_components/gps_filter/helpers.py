@@ -7,8 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 from .const import (
     CONF_MAX_ACCURACY,
     CONF_MAX_SPEED,
+    CONF_MAX_SPEED_DIFFERENCE,
     DEFAULT_MAX_ACCURACY,
     DEFAULT_MAX_SPEED,
+    DEFAULT_MAX_SPEED_DIFFERENCE,
 )
 
 
@@ -19,7 +21,15 @@ def get_device_name(entry: ConfigEntry) -> str:
 
 def get_config_value(entry: ConfigEntry, key: str):
     """Return an option value, falling back to config entry data."""
-    return getattr(entry, "options", {}).get(key, entry.data[key])
+    defaults = {
+        CONF_MAX_SPEED: DEFAULT_MAX_SPEED,
+        CONF_MAX_ACCURACY: DEFAULT_MAX_ACCURACY,
+        CONF_MAX_SPEED_DIFFERENCE: DEFAULT_MAX_SPEED_DIFFERENCE,
+    }
+    return getattr(entry, "options", {}).get(
+        key,
+        entry.data.get(key, defaults[key]),
+    )
 
 
 def get_effective_filter_config(entry: ConfigEntry) -> dict[str, float]:
@@ -32,5 +42,12 @@ def get_effective_filter_config(entry: ConfigEntry) -> dict[str, float]:
         CONF_MAX_ACCURACY: getattr(entry, "options", {}).get(
             CONF_MAX_ACCURACY,
             entry.data.get(CONF_MAX_ACCURACY, DEFAULT_MAX_ACCURACY),
+        ),
+        CONF_MAX_SPEED_DIFFERENCE: getattr(entry, "options", {}).get(
+            CONF_MAX_SPEED_DIFFERENCE,
+            entry.data.get(
+                CONF_MAX_SPEED_DIFFERENCE,
+                DEFAULT_MAX_SPEED_DIFFERENCE,
+            ),
         ),
     }

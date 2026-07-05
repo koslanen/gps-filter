@@ -13,9 +13,11 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_MAX_ACCURACY,
     CONF_MAX_SPEED,
+    CONF_MAX_SPEED_DIFFERENCE,
     CONF_SOURCE,
     DEFAULT_MAX_ACCURACY,
     DEFAULT_MAX_SPEED,
+    DEFAULT_MAX_SPEED_DIFFERENCE,
     DOMAIN,
 )
 
@@ -35,6 +37,13 @@ def _options_defaults(entry: ConfigEntry) -> dict[str, float]:
         CONF_MAX_ACCURACY: entry.options.get(
             CONF_MAX_ACCURACY,
             entry.data.get(CONF_MAX_ACCURACY, DEFAULT_MAX_ACCURACY),
+        ),
+        CONF_MAX_SPEED_DIFFERENCE: entry.options.get(
+            CONF_MAX_SPEED_DIFFERENCE,
+            entry.data.get(
+                CONF_MAX_SPEED_DIFFERENCE,
+                DEFAULT_MAX_SPEED_DIFFERENCE,
+            ),
         ),
     }
 
@@ -56,6 +65,10 @@ def _get_user_data_schema() -> vol.Schema:
                 CONF_MAX_ACCURACY,
                 default=DEFAULT_MAX_ACCURACY,
             ): POSITIVE_FLOAT,
+            vol.Required(
+                CONF_MAX_SPEED_DIFFERENCE,
+                default=DEFAULT_MAX_SPEED_DIFFERENCE,
+            ): POSITIVE_FLOAT,
         }
     )
 
@@ -71,6 +84,10 @@ def _get_options_schema(defaults: dict[str, float]) -> vol.Schema:
             vol.Required(
                 CONF_MAX_ACCURACY,
                 default=defaults[CONF_MAX_ACCURACY],
+            ): POSITIVE_FLOAT,
+            vol.Required(
+                CONF_MAX_SPEED_DIFFERENCE,
+                default=defaults[CONF_MAX_SPEED_DIFFERENCE],
             ): POSITIVE_FLOAT,
         }
     )
